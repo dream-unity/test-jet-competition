@@ -2,22 +2,26 @@
   "game": "Impulse Run",
   "deployment": "verified-live",
   "page_url": "https://dream-unity.github.io/test-jet-competition/",
-  "source_sha": "e70dc7ba013198064adb818caedfdbb46c8b90d1",
+  "source_sha": "a20598193df7ef731fe29c6ceae2c3c03b7b627d",
   "files_compared": [
     "index.html",
     "styles.css",
+    "control-relations.css",
     "src/main.js",
     "src/renderer.js",
     "src/relational.js",
+    "src/control-relations.js",
     "src/systems.js"
   ],
   "sha256": [
-    "ac32add2d7a0752d04aaf4ec99d2e3dc51b38e7aab91810e56f60b871002a7b3  /tmp/live/index.html",
+    "adea1b23750cc85ffb85b61b9e5d7062130ab5ae44a4e80ea237e121a64c06e1  /tmp/live/index.html",
     "c8c621d9d38acd8db4c7043229f2c5e56ba0a807f5d9f0cd95d979c9d28a64c2  /tmp/live/styles.css",
-    "f73a397a323a1bd905b18705b33db85124a3ece41369e64a17620d8a237ab642  /tmp/live/src/main.js",
+    "1b5bfb21e42bb141b2a8afd07ba0e2e1482373e8266146225a2ecad740ee883f  /tmp/live/control-relations.css",
+    "bb69071f69912d8f6fda6837e2acfbef95160f98843bde65d5210bce7e33d4fc  /tmp/live/src/control-relations.js",
+    "746be0157adcb0ea87e0fab8bc972d80e2fade008023c649c89d6f7f33a29461  /tmp/live/src/main.js",
     "3c35cdfdf0c17ea3f805204e3d619013c42a423a857a0b5ac2ea1c05c7b2ac93  /tmp/live/src/relational.js",
     "e004b3f44cd43f5098bf78fe98a474796b1189aed0382e13dfe4d5a6bdd6d350  /tmp/live/src/renderer.js",
-    "501cddb88b05c2f33613d6d2fa7b8e722fc1ad8577960571be125d1a8f7aae15  /tmp/live/src/systems.js"
+    "002b267d062feb5551915db3bf15a196d1177fc213da00154049f89ba0c0ca91  /tmp/live/src/systems.js"
   ],
-  "verified_at": "2026-08-24T13:11:40.876735+00:00"
+  "verified_at": "2026-08-24T13:15:14.126872+00:00"
 }
