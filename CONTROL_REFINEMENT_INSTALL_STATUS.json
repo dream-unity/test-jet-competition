@@ -1,7 +1,0 @@
-{
-  "feature": "dynamic-control-relations-refinement-install",
-  "status": "failed",
-  "exit_code": 1,
-  "recorded_at": "2026-08-24T13:05:47.590755+00:00",
-  "log_tail": "/tmp/refine.tar.gz: FAILED\nsha256sum: WARNING: 1 computed checksum did NOT match\n"
-}
