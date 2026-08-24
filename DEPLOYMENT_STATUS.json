@@ -2,7 +2,7 @@
   "game": "Impulse Run",
   "deployment": "verified-live",
   "page_url": "https://dream-unity.github.io/test-jet-competition/",
-  "source_sha": "47ef0a62c838307b44d872caf519bd2c289b5532",
+  "source_sha": "7101e7ec8b64902926caccb999fa5d586de340ad",
   "files_compared": [
     "index.html",
     "styles.css",
@@ -19,5 +19,5 @@
     "e004b3f44cd43f5098bf78fe98a474796b1189aed0382e13dfe4d5a6bdd6d350  /tmp/live/src/renderer.js",
     "501cddb88b05c2f33613d6d2fa7b8e722fc1ad8577960571be125d1a8f7aae15  /tmp/live/src/systems.js"
   ],
-  "verified_at": "2026-08-24T11:42:46.076536+00:00"
+  "verified_at": "2026-08-24T11:44:07.942174+00:00"
 }
