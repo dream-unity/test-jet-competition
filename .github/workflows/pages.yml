@@ -25,7 +25,7 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Validate relational engine, renderer and static build
+      - name: Validate relational engine, control-frame engine, renderer and static build
         run: npm test
 
       - name: Publish immutable static surface to gh-pages
@@ -37,7 +37,7 @@ jobs:
           git worktree add --force /tmp/impulse-run-pages -B gh-pages origin/gh-pages
 
           find /tmp/impulse-run-pages -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
-          cp index.html styles.css package.json README.md LICENSE \
+          cp index.html styles.css control-relations.css package.json README.md LICENSE \
              ASSET_MANIFEST.json THIRD_PARTY_NOTICES.md /tmp/impulse-run-pages/
           cp -R src /tmp/impulse-run-pages/src
           touch /tmp/impulse-run-pages/.nojekyll

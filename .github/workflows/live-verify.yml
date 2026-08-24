@@ -31,7 +31,16 @@ jobs:
           PAGE_URL: https://dream-unity.github.io/test-jet-competition
         run: |
           set -euo pipefail
-          files=(index.html styles.css src/main.js src/renderer.js src/relational.js src/systems.js)
+          files=(
+            index.html
+            styles.css
+            control-relations.css
+            src/main.js
+            src/renderer.js
+            src/relational.js
+            src/control-relations.js
+            src/systems.js
+          )
           mkdir -p /tmp/live/src
           matched='false'
           for attempt in $(seq 1 30); do
@@ -56,8 +65,13 @@ jobs:
           done
           test "$matched" = 'true'
           grep -q '<title>Impulse Run' /tmp/live/index.html
-          grep -q 'IMPULSE RUN' /tmp/live/index.html
-          sha256sum /tmp/live/index.html /tmp/live/styles.css /tmp/live/src/*.js > /tmp/live-checksums.txt
+          grep -q 'controlRelationSystem' /tmp/live/index.html
+          grep -q 'generateControlSchedule' /tmp/live/src/control-relations.js
+          sha256sum \
+            /tmp/live/index.html \
+            /tmp/live/styles.css \
+            /tmp/live/control-relations.css \
+            /tmp/live/src/*.js > /tmp/live-checksums.txt
 
       - name: Commit verified deployment receipt
         shell: bash
@@ -78,8 +92,9 @@ jobs:
               'page_url': os.environ['PAGE_URL'],
               'source_sha': os.environ['SOURCE_SHA'],
               'files_compared': [
-                  'index.html', 'styles.css', 'src/main.js', 'src/renderer.js',
-                  'src/relational.js', 'src/systems.js'
+                  'index.html', 'styles.css', 'control-relations.css',
+                  'src/main.js', 'src/renderer.js', 'src/relational.js',
+                  'src/control-relations.js', 'src/systems.js'
               ],
               'sha256': Path('/tmp/live-checksums.txt').read_text(encoding='utf-8').splitlines(),
               'verified_at': datetime.now(timezone.utc).isoformat(),
