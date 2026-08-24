@@ -1,6 +1,6 @@
 {
   "game": "Impulse Run",
-  "source_sha": "10d9b10d073bda0970a5b88f1db071ae8da5bdab",
+  "source_sha": "47ef0a62c838307b44d872caf519bd2c289b5532",
   "tests": "passed",
   "pages_before_http_code": "200",
   "pages_before_response": {
@@ -38,5 +38,5 @@
     "pending_domain_unverified_at": null,
     "https_enforced": true
   },
-  "recorded_at": "2026-08-24T11:41:45.785789+00:00"
+  "recorded_at": "2026-08-24T11:42:48.647163+00:00"
 }
