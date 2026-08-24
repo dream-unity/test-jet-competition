@@ -7,6 +7,7 @@ on:
     paths:
       - '.refine/**'
       - '.github/workflows/apply-control-refinements.yml'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -81,33 +82,11 @@ jobs:
 
           css_path = Path('control-relations.css')
           css = css_path.read_text(encoding='utf-8')
-          old = '''.cr-output-frame .cr-probe-a,
-          .cr-mini-output .cr-probe-a {
-            background: var(--cr-magenta);
-            box-shadow: 0 0 4px #fff, 0 0 14px var(--cr-magenta), 0 0 24px rgba(255, 79, 216, 0.55);
-          }
-
-          .cr-output-frame .cr-probe-b,
-          .cr-mini-output .cr-probe-b {
-            background: var(--cr-green);
-            box-shadow: 0 0 4px #fff, 0 0 12px var(--cr-green), 0 0 22px rgba(117, 255, 155, 0.52);
-          }
-          '''
-          new = '''.cr-output-frame .cr-probe-a,
-          .cr-mini-output .cr-probe-a {
-            background: var(--cr-cyan);
-            box-shadow: 0 0 4px #fff, 0 0 14px var(--cr-cyan), 0 0 24px rgba(85, 247, 255, 0.55);
-          }
-
-          .cr-output-frame .cr-probe-b,
-          .cr-mini-output .cr-probe-b {
-            background: var(--cr-gold);
-            box-shadow: 0 0 4px #fff, 0 0 12px var(--cr-gold), 0 0 22px rgba(255, 209, 102, 0.52);
-          }
-          '''
-          if old not in css:
-              raise SystemExit('Expected output-probe CSS block was not found')
-          css_path.write_text(css.replace(old, new, 1), encoding='utf-8')
+          css = css.replace('''background: var(--cr-magenta);\n  box-shadow: 0 0 4px #fff, 0 0 14px var(--cr-magenta), 0 0 24px rgba(255, 79, 216, 0.55);''', '''background: var(--cr-cyan);\n  box-shadow: 0 0 4px #fff, 0 0 14px var(--cr-cyan), 0 0 24px rgba(85, 247, 255, 0.55);''', 1)
+          css = css.replace('''background: var(--cr-green);\n  box-shadow: 0 0 4px #fff, 0 0 12px var(--cr-green), 0 0 22px rgba(117, 255, 155, 0.52);''', '''background: var(--cr-gold);\n  box-shadow: 0 0 4px #fff, 0 0 12px var(--cr-gold), 0 0 22px rgba(255, 209, 102, 0.52);''', 1)
+          if 'background: var(--cr-magenta)' in css or 'background: var(--cr-green)' in css:
+              raise SystemExit('Output-probe identity colour patch did not complete')
+          css_path.write_text(css, encoding='utf-8')
 
           readme_path = Path('README.md')
           readme = readme_path.read_text(encoding='utf-8')
@@ -120,9 +99,6 @@ jobs:
               '- pre-activation trajectory reference, predictive compensation, first meaningful action, inference latency and first-action correctness;'
           )
           readme_path.write_text(readme, encoding='utf-8')
-
-          shutil.rmtree('.refine')
-          Path('.github/workflows/apply-control-refinements.yml').unlink()
           print('Verified and installed refinement archive:', digest)
           PY
 
@@ -144,7 +120,11 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
+          git add src/control-relations.js src/main.js tests/control-relations.test.mjs tests/static.test.mjs control-relations.css README.md
+          if git diff --cached --quiet; then
+            echo 'Refined sources are already installed.'
+            exit 0
+          fi
           git commit -m 'Refine dynamic control-frame inference and in-world cues'
           git pull --rebase origin feature/dynamic-control-relations
           git push origin HEAD:feature/dynamic-control-relations
