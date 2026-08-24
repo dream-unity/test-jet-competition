@@ -11,6 +11,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: live-deployment-verification
+  cancel-in-progress: true
+
 jobs:
   verify-live:
     runs-on: ubuntu-latest
@@ -21,19 +25,36 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Verify live files exactly match tested source
+      - name: Wait for live files to exactly match tested source
         shell: bash
         env:
           PAGE_URL: https://dream-unity.github.io/test-jet-competition
         run: |
           set -euo pipefail
+          files=(index.html styles.css src/main.js src/renderer.js src/relational.js src/systems.js)
           mkdir -p /tmp/live/src
-          for path in index.html styles.css src/main.js src/renderer.js src/relational.js src/systems.js; do
-            curl --fail --location --silent --show-error \
-              --retry 18 --retry-all-errors --retry-delay 5 \
-              "$PAGE_URL/$path" --output "/tmp/live/$path"
-            cmp --silent "$path" "/tmp/live/$path"
+          matched='false'
+          for attempt in $(seq 1 30); do
+            matched='true'
+            for path in "${files[@]}"; do
+              if ! curl --fail --location --silent --show-error \
+                --retry 3 --retry-all-errors --retry-delay 2 \
+                "$PAGE_URL/$path?source=${GITHUB_SHA}" --output "/tmp/live/$path"; then
+                matched='false'
+                break
+              fi
+              if ! cmp --silent "$path" "/tmp/live/$path"; then
+                matched='false'
+                break
+              fi
+            done
+            if [ "$matched" = 'true' ]; then
+              break
+            fi
+            echo "Deployment has not propagated yet (attempt $attempt/30)."
+            sleep 5
           done
+          test "$matched" = 'true'
           grep -q '<title>Impulse Run' /tmp/live/index.html
           grep -q 'IMPULSE RUN' /tmp/live/index.html
           sha256sum /tmp/live/index.html /tmp/live/styles.css /tmp/live/src/*.js > /tmp/live-checksums.txt
