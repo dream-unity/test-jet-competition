@@ -4,15 +4,55 @@ on:
   push:
     branches:
       - feature/dynamic-control-relations
+    paths-ignore:
+      - 'FEATURE_VALIDATION_STATUS.json'
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: feature-dynamic-control-relations-validation
+  cancel-in-progress: true
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout feature source
+      - name: Checkout exact feature source
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: feature/dynamic-control-relations
+          fetch-depth: 0
+
       - name: Run complete project validation
         run: npm test
+
+      - name: Record passing feature validation
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from datetime import datetime, timezone
+          from pathlib import Path
+          import json
+          import os
+
+          receipt = {
+              'feature': 'dynamic-control-relations',
+              'source_sha': os.environ['SOURCE_SHA'],
+              'tests': 'passed',
+              'validated_at': datetime.now(timezone.utc).isoformat(),
+          }
+          Path('FEATURE_VALIDATION_STATUS.json').write_text(
+              json.dumps(receipt, indent=2) + '\n', encoding='utf-8'
+          )
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add FEATURE_VALIDATION_STATUS.json
+          git diff --cached --quiet && exit 0
+          git commit -m 'Record passing dynamic control relations validation [skip ci]'
+          git pull --rebase origin feature/dynamic-control-relations
+          git push origin HEAD:feature/dynamic-control-relations
