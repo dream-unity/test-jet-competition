@@ -1,6 +1,6 @@
 {
   "feature": "dynamic-control-relations",
-  "source_sha": "0f1b63108ad8ae63e7209e339761117b9c7ada81",
+  "source_sha": "f9fb58e8feb7d78a907cdbe953a117e2236f43cf",
   "tests": "passed",
-  "validated_at": "2026-08-24T12:55:27.718825+00:00"
+  "validated_at": "2026-08-24T13:00:44.054139+00:00"
 }
