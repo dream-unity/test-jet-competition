@@ -11,7 +11,8 @@
     "course structures",
     "cityscape",
     "star field",
+    "control-frame transformation cues",
     "sound synthesis"
   ],
-  "notes": "All visual geometry and audio are generated at runtime from original code in this repository. No remote assets, fonts, analytics or runtime libraries are loaded."
+  "notes": "All visual geometry, control-frame demonstrations and audio are generated at runtime from original code in this repository. No remote assets, fonts, analytics or runtime libraries are loaded."
 }
