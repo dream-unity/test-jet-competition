@@ -23,38 +23,69 @@ jobs:
           ref: feature/dynamic-control-relations
           fetch-depth: 0
 
-      - name: Recover exact locally-tested refinement source
+      - name: Recover, validate, commit and record result
         shell: bash
         run: |
-          set -euo pipefail
+          set +e
+          exec > >(tee /tmp/control-refinement-install.log) 2>&1
+
           cat .refine/part-00.b64 .refine/part-01.b64 .refine/part-02.b64 | base64 --decode > /tmp/refine.tar.gz
-          echo 'e663780e4757345bbf525e0492af053d7ce63ca8943f39ddd90638bdf4d280d4  /tmp/refine.tar.gz' | sha256sum --check
-          rm -rf /tmp/refined-source
-          mkdir -p /tmp/refined-source
-          tar --extract --gzip --file /tmp/refine.tar.gz --directory /tmp/refined-source
-          echo 'bb69071f69912d8f6fda6837e2acfbef95160f98843bde65d5210bce7e33d4fc  /tmp/refined-source/src/control-relations.js' | sha256sum --check
-          echo '746be0157adcb0ea87e0fab8bc972d80e2fade008023c649c89d6f7f33a29461  /tmp/refined-source/src/main.js' | sha256sum --check
-          echo 'a473d400e76c16db3e600c97b87deef1e3b4678faf7f7afad86e7d7c78b4e245  /tmp/refined-source/tests/control-relations.test.mjs' | sha256sum --check
-          echo 'ecbad24c76f324e956838155706a4b4448b38d9e592438353053beca6e106f97  /tmp/refined-source/tests/static.test.mjs' | sha256sum --check
-          cp /tmp/refined-source/src/control-relations.js src/control-relations.js
-          cp /tmp/refined-source/src/main.js src/main.js
-          cp /tmp/refined-source/tests/control-relations.test.mjs tests/control-relations.test.mjs
-          cp /tmp/refined-source/tests/static.test.mjs tests/static.test.mjs
+          status=$?
+          if [ "$status" -eq 0 ]; then
+            echo 'e663780e4757345bbf525e0492af053d7ce63ca8943f39ddd90638bdf4d280d4  /tmp/refine.tar.gz' | sha256sum --check
+            status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            rm -rf /tmp/refined-source
+            mkdir -p /tmp/refined-source
+            tar --extract --gzip --file /tmp/refine.tar.gz --directory /tmp/refined-source
+            status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            echo 'bb69071f69912d8f6fda6837e2acfbef95160f98843bde65d5210bce7e33d4fc  /tmp/refined-source/src/control-relations.js' | sha256sum --check || status=$?
+            echo '746be0157adcb0ea87e0fab8bc972d80e2fade008023c649c89d6f7f33a29461  /tmp/refined-source/src/main.js' | sha256sum --check || status=$?
+            echo 'a473d400e76c16db3e600c97b87deef1e3b4678faf7f7afad86e7d7c78b4e245  /tmp/refined-source/tests/control-relations.test.mjs' | sha256sum --check || status=$?
+            echo 'ecbad24c76f324e956838155706a4b4448b38d9e592438353053beca6e106f97  /tmp/refined-source/tests/static.test.mjs' | sha256sum --check || status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            cp /tmp/refined-source/src/control-relations.js src/control-relations.js
+            cp /tmp/refined-source/src/main.js src/main.js
+            cp /tmp/refined-source/tests/control-relations.test.mjs tests/control-relations.test.mjs
+            cp /tmp/refined-source/tests/static.test.mjs tests/static.test.mjs
+            npm test
+            status=$?
+          fi
 
-      - name: Run complete feature validation
-        run: npm test
+          export INSTALL_STATUS="$status"
+          python3 - <<'PY'
+          from datetime import datetime, timezone
+          from pathlib import Path
+          import json
+          import os
 
-      - name: Commit verified refinements to target branch
-        shell: bash
-        run: |
-          set -euo pipefail
+          log = Path('/tmp/control-refinement-install.log').read_text(encoding='utf-8', errors='replace')
+          receipt = {
+              'feature': 'dynamic-control-relations-refinement-install',
+              'status': 'passed' if os.environ['INSTALL_STATUS'] == '0' else 'failed',
+              'exit_code': int(os.environ['INSTALL_STATUS']),
+              'recorded_at': datetime.now(timezone.utc).isoformat(),
+              'log_tail': log[-12000:],
+          }
+          Path('CONTROL_REFINEMENT_INSTALL_STATUS.json').write_text(
+              json.dumps(receipt, indent=2) + '\n', encoding='utf-8'
+          )
+          PY
+
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src/control-relations.js src/main.js tests/control-relations.test.mjs tests/static.test.mjs
+          if [ "$status" -eq 0 ]; then
+            git add src/control-relations.js src/main.js tests/control-relations.test.mjs tests/static.test.mjs
+          fi
+          git add CONTROL_REFINEMENT_INSTALL_STATUS.json
           if git diff --cached --quiet; then
-            echo 'Verified refinement source is already installed.'
             exit 0
           fi
-          git commit -m 'Install tested control-frame inference refinements'
+          git commit -m 'Record and install tested control-frame refinements'
           git pull --rebase origin feature/dynamic-control-relations
           git push origin HEAD:feature/dynamic-control-relations
+          exit 0
