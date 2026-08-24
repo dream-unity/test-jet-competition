@@ -1,4 +1,5 @@
 import { clamp } from './relational.js';
+import { ControlRelationController } from './control-relations.js';
 
 export class InputController {
   constructor({ canvas, joystick, stick, boostButton, brakeButton, pauseButton }) {
@@ -17,6 +18,9 @@ export class InputController {
     this.pauseQueued = false;
     this.lastPauseKey = false;
     this.activePointer = null;
+    this.controlRelations = new ControlRelationController({
+      getApp: () => (typeof window !== 'undefined' ? window.impulseRun : null),
+    });
     this.bind();
   }
 
@@ -33,6 +37,7 @@ export class InputController {
       this.brakeTouch = false;
       this.mouseActive = false;
       this.resetStick();
+      this.controlRelations.release();
     });
 
     if (this.canvas) {
@@ -160,15 +165,24 @@ export class InputController {
       this.lastPauseKey = pausePressed;
     }
 
-    const x = clamp(keyboardX + this.touchAxis.x + this.mouseAxis.x + gamepadX, -1, 1);
-    const y = clamp(keyboardY + this.touchAxis.y + this.mouseAxis.y + gamepadY, -1, 1);
+    const rawX = clamp(keyboardX + this.touchAxis.x + this.mouseAxis.x + gamepadX, -1, 1);
+    const rawY = clamp(keyboardY + this.touchAxis.y + this.mouseAxis.y + gamepadY, -1, 1);
+    const transformed = this.controlRelations.process({ x: rawX, y: rawY });
     const roll = clamp(keyboardRoll + gamepadRoll, -1, 1);
     const boost = this.keys.has('ShiftLeft') || this.keys.has('ShiftRight') || this.boostTouch || gamepadBoost;
     const brake = this.keys.has('Space') || this.brakeTouch || gamepadBrake;
     const pause = this.pauseQueued;
     this.pauseQueued = false;
 
-    return { x, y, roll, boost, brake, pause };
+    return {
+      x: transformed.x,
+      y: transformed.y,
+      roll,
+      boost,
+      brake,
+      pause,
+      controlRelation: transformed.meta,
+    };
   }
 }
 
@@ -182,6 +196,11 @@ export class AudioEngine {
     this.airOscillator = null;
     this.enabled = true;
     this.unlocked = false;
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('impulse-control-relation-cue', () => this.cue('control-cue'));
+      window.addEventListener('impulse-control-relation-change', () => this.cue('control-shift'));
+    }
   }
 
   async unlock() {
@@ -263,6 +282,12 @@ export class AudioEngine {
       this.tone(88, 0.16, 'square', 0.09);
     } else if (kind === 'finish') {
       [440, 554, 659, 880].forEach((frequency, index) => this.tone(frequency, 0.32, 'triangle', 0.07, index * 0.11));
+    } else if (kind === 'control-cue') {
+      this.tone(330, 0.08, 'triangle', 0.035);
+      this.tone(495, 0.09, 'sine', 0.03, 0.075);
+    } else if (kind === 'control-shift') {
+      this.tone(620, 0.11, 'triangle', 0.055);
+      this.tone(360, 0.18, 'sine', 0.045, 0.06);
     }
   }
 }
