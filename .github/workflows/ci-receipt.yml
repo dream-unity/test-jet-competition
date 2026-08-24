@@ -25,22 +25,41 @@ jobs:
       - name: Run complete project validation
         run: npm test
 
-      - name: Query Pages configuration
-        id: pages
+      - name: Query and attempt Pages enablement
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          code=$(curl --silent --show-error \
-            --output /tmp/pages-response.json \
+          api="https://api.github.com/repos/$GITHUB_REPOSITORY/pages"
+          headers=(
+            --header 'Accept: application/vnd.github+json'
+            --header "Authorization: Bearer $GH_TOKEN"
+            --header 'X-GitHub-Api-Version: 2022-11-28'
+          )
+          get_code=$(curl --silent --show-error \
+            --output /tmp/pages-before.json \
             --write-out '%{http_code}' \
-            --header 'Accept: application/vnd.github+json' \
-            --header "Authorization: Bearer $GH_TOKEN" \
-            --header 'X-GitHub-Api-Version: 2022-11-28' \
-            "https://api.github.com/repos/$GITHUB_REPOSITORY/pages")
-          echo "http_code=$code" >> "$GITHUB_OUTPUT"
-          printf '%s\n' "$code" > /tmp/pages-code.txt
+            "${headers[@]}" "$api")
+          create_code='not-needed'
+          printf '%s\n' '{}' > /tmp/pages-create.json
+          if [ "$get_code" = '404' ]; then
+            create_code=$(curl --silent --show-error \
+              --request POST \
+              --output /tmp/pages-create.json \
+              --write-out '%{http_code}' \
+              "${headers[@]}" \
+              --data '{"build_type":"workflow"}' \
+              "$api")
+          fi
+          sleep 3
+          after_code=$(curl --silent --show-error \
+            --output /tmp/pages-after.json \
+            --write-out '%{http_code}' \
+            "${headers[@]}" "$api")
+          printf '%s\n' "$get_code" > /tmp/pages-before-code.txt
+          printf '%s\n' "$create_code" > /tmp/pages-create-code.txt
+          printf '%s\n' "$after_code" > /tmp/pages-after-code.txt
 
       - name: Commit machine-readable validation receipt
         shell: bash
@@ -54,17 +73,23 @@ jobs:
           import json
           import os
 
-          response_path = Path('/tmp/pages-response.json')
-          try:
-              pages = json.loads(response_path.read_text(encoding='utf-8'))
-          except Exception:
-              pages = {'raw': response_path.read_text(encoding='utf-8', errors='replace')}
+          def load(path):
+              file = Path(path)
+              try:
+                  return json.loads(file.read_text(encoding='utf-8'))
+              except Exception:
+                  return {'raw': file.read_text(encoding='utf-8', errors='replace')}
+
           receipt = {
               'game': 'Impulse Run',
               'source_sha': os.environ['SOURCE_SHA'],
               'tests': 'passed',
-              'pages_http_code': Path('/tmp/pages-code.txt').read_text().strip(),
-              'pages_response': pages,
+              'pages_before_http_code': Path('/tmp/pages-before-code.txt').read_text().strip(),
+              'pages_before_response': load('/tmp/pages-before.json'),
+              'pages_create_http_code': Path('/tmp/pages-create-code.txt').read_text().strip(),
+              'pages_create_response': load('/tmp/pages-create.json'),
+              'pages_after_http_code': Path('/tmp/pages-after-code.txt').read_text().strip(),
+              'pages_after_response': load('/tmp/pages-after.json'),
               'recorded_at': datetime.now(timezone.utc).isoformat(),
           }
           Path('CI_STATUS.json').write_text(json.dumps(receipt, indent=2) + '\n', encoding='utf-8')
@@ -73,6 +98,6 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add CI_STATUS.json
           git diff --cached --quiet && exit 0
-          git commit -m 'Record passing CI and Pages state [skip ci]'
+          git commit -m 'Record passing CI and Pages enablement state [skip ci]'
           git pull --rebase origin main
           git push origin HEAD:main
