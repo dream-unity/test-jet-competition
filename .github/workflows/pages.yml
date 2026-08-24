@@ -3,10 +3,12 @@ name: Validate and deploy Impulse Run
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'DEPLOYMENT_STATUS.json'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -20,10 +22,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
       - name: Validate relational engine and static build
         run: npm test
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
+
       - name: Upload static site
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
         with:
@@ -39,3 +44,52 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@decdde0ac072f6dcbe43649c70c934509e0e983d # v4.0.5
+
+      - name: Verify deployed game responds
+        shell: bash
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          set -euo pipefail
+          test -n "$PAGE_URL"
+          curl --fail --location --silent --show-error \
+            --retry 12 --retry-all-errors --retry-delay 5 \
+            "$PAGE_URL" | grep -q 'IMPULSE'
+
+      - name: Check out main for deployment receipt
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Commit verified deployment receipt
+        shell: bash
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from datetime import datetime, timezone
+          from pathlib import Path
+          import json
+          import os
+
+          receipt = {
+              'game': 'Impulse Run',
+              'deployment': 'verified',
+              'page_url': os.environ['PAGE_URL'],
+              'source_sha': os.environ['SOURCE_SHA'],
+              'verified_at': datetime.now(timezone.utc).isoformat(),
+          }
+          Path('DEPLOYMENT_STATUS.json').write_text(
+              json.dumps(receipt, indent=2) + '\n', encoding='utf-8'
+          )
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add DEPLOYMENT_STATUS.json
+          git diff --cached --quiet && exit 0
+          git commit -m 'Record verified GitHub Pages deployment [skip ci]'
+          git pull --rebase origin main
+          git push origin HEAD:main
