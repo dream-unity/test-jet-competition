@@ -1,0 +1,17 @@
+{
+  "schema": "dream-unity.asset-manifest.v1",
+  "game": "Impulse Run",
+  "external_assets": [],
+  "runtime_dependencies": [],
+  "procedural_assets": [
+    "fighter-jet meshes",
+    "AI racer meshes",
+    "relational formations",
+    "gate geometry",
+    "course structures",
+    "cityscape",
+    "star field",
+    "sound synthesis"
+  ],
+  "notes": "All visual geometry and audio are generated at runtime from original code in this repository. No remote assets, fonts, analytics or runtime libraries are loaded."
+}

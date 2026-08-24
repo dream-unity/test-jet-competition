@@ -1,0 +1,15 @@
+{
+  "name": "dream-unity-impulse-run",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dependency-free 3D fighter-jet visual relational racing game for GitHub Pages.",
+  "scripts": {
+    "test": "node tests/relational.test.mjs && node tests/renderer.test.mjs && node tests/static.test.mjs",
+    "test:relational": "node tests/relational.test.mjs",
+    "test:static": "node tests/static.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

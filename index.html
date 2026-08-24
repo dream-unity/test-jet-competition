@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#050914">
+  <meta name="description" content="Impulse Run — a 3D fighter-jet racing game where visual relational reasoning determines the racing line.">
+  <title>Impulse Run — Dream Unity</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div id="app">
+    <canvas id="gameCanvas" aria-label="Impulse Run 3D racing viewport"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+    <div class="scanlines" aria-hidden="true"></div>
+
+    <header id="hud" class="hud hidden" aria-live="polite">
+      <div class="hud-cluster brand-cluster">
+        <span class="eyebrow">DREAM UNITY // VECTOR CIRCUIT</span>
+        <strong>IMPULSE RUN</strong>
+        <span id="modeLabel" class="mode-label">RELATIONAL GRAND PRIX</span>
+      </div>
+      <div class="hud-cluster metrics-cluster">
+        <div class="metric"><span>POS</span><strong id="positionValue">1 / 6</strong></div>
+        <div class="metric"><span>TIME</span><strong id="timeValue">00:00.0</strong></div>
+        <div class="metric"><span>SECTOR</span><strong id="sectorValue">1 / 10</strong></div>
+      </div>
+      <div class="hud-cluster score-cluster">
+        <div class="metric relation"><span>RELATION</span><strong id="relationValue">—</strong></div>
+        <div class="metric pilot"><span>PILOT</span><strong id="pilotValue">—</strong></div>
+        <div class="metric"><span>SPEED</span><strong id="speedValue">0</strong><small>KM/H</small></div>
+      </div>
+      <div class="resource-stack">
+        <div class="resource-row"><span>BOOST</span><div class="resource-track"><i id="boostFill"></i></div></div>
+        <div class="resource-row"><span>SHIELD</span><div class="resource-track shield"><i id="shieldFill"></i></div></div>
+      </div>
+    </header>
+
+    <div id="challengeBeacon" class="challenge-beacon hidden" aria-hidden="true">
+      <i></i><span id="challengeFamily">VISUAL RELATION</span><i></i>
+    </div>
+
+    <div id="feedback" class="feedback hidden" role="status"></div>
+    <div id="countdown" class="countdown hidden" aria-live="assertive"></div>
+
+    <section id="menu" class="overlay menu-overlay">
+      <div class="menu-panel glass">
+        <div class="menu-kicker">DREAM UNITY // 03</div>
+        <h1>IMPULSE <span>RUN</span></h1>
+        <p class="menu-subtitle">See → visually relate → anticipate → commit trajectory → fly.</p>
+        <p class="menu-copy">Watch a formation change, transfer that relationship to a new formation, then fly through the corridor that preserves it. Your flight path is the answer.</p>
+
+        <div class="mode-grid" role="group" aria-label="Race mode">
+          <button class="mode-card selected" data-mode="grand-prix">
+            <span class="mode-index">01</span>
+            <strong>RELATIONAL GRAND PRIX</strong>
+            <small>Adaptive visual inference, six racers, immediate split feedback.</small>
+          </button>
+          <button class="mode-card" data-mode="training">
+            <span class="mode-index">02</span>
+            <strong>VECTOR TRAINING</strong>
+            <small>Slower entry speed, tutorial guidance, targeted error feedback.</small>
+          </button>
+          <button class="mode-card" data-mode="assessment">
+            <span class="mode-index">03</span>
+            <strong>ASSESSMENT RUN</strong>
+            <small>Balanced difficulty and withheld feedback until the finish.</small>
+          </button>
+          <button class="mode-card" data-mode="transfer">
+            <span class="mode-index">04</span>
+            <strong>TRANSFER TRIAL</strong>
+            <small>Novel frames, compositions and encodings resistant to memorisation.</small>
+          </button>
+        </div>
+
+        <div class="menu-actions">
+          <button id="launchButton" class="primary-button">LAUNCH GRAND PRIX</button>
+          <button id="soundButton" class="icon-button" aria-label="Toggle sound" title="Toggle sound">♪</button>
+          <button id="motionButton" class="icon-button" aria-label="Toggle reduced motion" title="Toggle reduced motion">≈</button>
+        </div>
+        <div class="control-strip">
+          <span><b>DESKTOP</b> WASD / arrows steer · Shift boost · Space brake · mouse-drag supported</span>
+          <span><b>MOBILE</b> left flight stick · boost and brake controls</span>
+        </div>
+        <p class="disclaimer">Relational choice and flight execution are recorded separately. Performance telemetry is experimental and is not a clinical IQ measure.</p>
+      </div>
+    </section>
+
+    <section id="pauseOverlay" class="overlay hidden">
+      <div class="compact-panel glass">
+        <div class="menu-kicker">FLIGHT SUSPENDED</div>
+        <h2>PAUSED</h2>
+        <button id="resumeButton" class="primary-button">RESUME</button>
+        <button id="restartButton" class="secondary-button">RESTART RUN</button>
+        <button id="menuButton" class="secondary-button">RETURN TO MODE SELECT</button>
+      </div>
+    </section>
+
+    <section id="resultsOverlay" class="overlay hidden">
+      <div class="results-panel glass">
+        <div class="menu-kicker">SESSION COMPLETE</div>
+        <h2 id="resultTitle">VECTOR RUN COMPLETE</h2>
+        <div class="result-summary">
+          <div class="result-ring relation-ring"><strong id="resultRelation">0%</strong><span>RELATIONAL</span></div>
+          <div class="result-ring pilot-ring"><strong id="resultPilot">0%</strong><span>PILOTING</span></div>
+          <div class="result-ring"><strong id="resultPosition">1 / 6</strong><span>FINISH</span></div>
+        </div>
+        <div class="result-grid">
+          <div><span>Median commitment</span><strong id="resultLatency">0.00 s</strong></div>
+          <div><span>Novel challenge rate</span><strong id="resultNovelty">100%</strong></div>
+          <div><span>Gate precision</span><strong id="resultPrecision">0%</strong></div>
+          <div><span>Collisions</span><strong id="resultCollisions">0</strong></div>
+          <div><span>Top diagnostic</span><strong id="resultDiagnostic">—</strong></div>
+          <div><span>Race time</span><strong id="resultTime">00:00.0</strong></div>
+        </div>
+        <div id="familyBreakdown" class="family-breakdown"></div>
+        <div class="result-actions">
+          <button id="runAgainButton" class="primary-button">RUN AGAIN</button>
+          <button id="exportButton" class="secondary-button">EXPORT TELEMETRY</button>
+          <button id="resultsMenuButton" class="secondary-button">MODE SELECT</button>
+        </div>
+        <p class="disclaimer">Scores compare performance within this game session; they do not establish general-intelligence gains or clinical assessment validity.</p>
+      </div>
+    </section>
+
+    <button id="pauseButton" class="pause-button hidden" aria-label="Pause">Ⅱ</button>
+
+    <div id="touchControls" class="touch-controls hidden" aria-label="Touch flight controls">
+      <div id="joystick" class="joystick"><div id="stick" class="stick"></div></div>
+      <div class="touch-actions">
+        <button id="boostButton" class="touch-button boost-button"><span>BOOST</span></button>
+        <button id="brakeButton" class="touch-button brake-button"><span>BRAKE</span></button>
+      </div>
+    </div>
+
+    <div id="fatalError" class="fatal-error hidden" role="alert"></div>
+  </div>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
