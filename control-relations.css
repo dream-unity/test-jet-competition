@@ -147,14 +147,14 @@
 
 .cr-output-frame .cr-probe-a,
 .cr-mini-output .cr-probe-a {
-  background: var(--cr-magenta);
-  box-shadow: 0 0 4px #fff, 0 0 14px var(--cr-magenta), 0 0 24px rgba(255, 79, 216, 0.55);
+  background: var(--cr-cyan);
+  box-shadow: 0 0 4px #fff, 0 0 14px var(--cr-cyan), 0 0 24px rgba(85, 247, 255, 0.55);
 }
 
 .cr-output-frame .cr-probe-b,
 .cr-mini-output .cr-probe-b {
-  background: var(--cr-green);
-  box-shadow: 0 0 4px #fff, 0 0 12px var(--cr-green), 0 0 22px rgba(117, 255, 155, 0.52);
+  background: var(--cr-gold);
+  box-shadow: 0 0 4px #fff, 0 0 12px var(--cr-gold), 0 0 22px rgba(255, 209, 102, 0.52);
 }
 
 @keyframes cr-probe-a {

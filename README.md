@@ -24,7 +24,7 @@ The control-remapping layer uses the eight orthogonal symmetries of a square con
 - clockwise or counter-clockwise quarter rotation;
 - diagonal or anti-diagonal axis exchange.
 
-Every mapping preserves input magnitude, so only the relation between control direction and flight direction changes. Before activation, two non-collinear moving probes directly demonstrate the upcoming transformation. Their directions, presentation encoding, mapping transition and timing are procedurally varied; no verbal rule or logic premise is shown.
+Every mapping preserves input magnitude, so only the relation between control direction and flight direction changes. Before activation, two non-collinear moving probes directly demonstrate the upcoming transformation in both a high-legibility HUD frame and a player-relative in-course hologram. Their directions, presentation encoding, mapping transition and timing are procedurally varied; no verbal rule or logic premise is shown.
 
 Cadence is mode-specific but always bounded between 16 and 30 seconds after the first change:
 
@@ -42,7 +42,7 @@ Control-frame adaptation is measured separately from corridor reasoning and ordi
 - mapping family, complexity, cue duration, actual interval and any fairness deferral;
 - visual probe correspondences and transition novelty signature;
 - pre-switch trajectory reference and its measurement eligibility;
-- first meaningful action, inference latency and first-action correctness;
+- pre-activation trajectory reference, predictive compensation, first meaningful action, inference latency and first-action correctness;
 - old-frame perseveration, inverse response, axis exchange, exploratory response or response inhibition;
 - recovery time, switch cost, integrated control error and a short 12 Hz trajectory trace;
 - mapping/family exposure, adaptation trend, transition novelty and cross-session schedule history.

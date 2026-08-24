@@ -9,6 +9,7 @@
 
 const EPSILON = 1e-9;
 const HISTORY_KEY = 'dream-unity-impulse-run-control-relations-v1';
+const HARD_MAX_INTERVAL = 30;
 
 const clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));
 const round = (value, digits = 4) => Number(value.toFixed(digits));
@@ -509,9 +510,13 @@ export class ControlRelationController {
 
   readAvoidedSignatures() {
     if (typeof localStorage === 'undefined') return [];
-    const stored = safeParse(localStorage.getItem(HISTORY_KEY), []);
-    if (!Array.isArray(stored)) return [];
-    return stored.flatMap((session) => Array.isArray(session.signatures) ? session.signatures : []).slice(-240);
+    try {
+      const stored = safeParse(localStorage.getItem(HISTORY_KEY), []);
+      if (!Array.isArray(stored)) return [];
+      return stored.flatMap((session) => Array.isArray(session.signatures) ? session.signatures : []).slice(-240);
+    } catch {
+      return [];
+    }
   }
 
   startSession(app) {
@@ -586,15 +591,16 @@ export class ControlRelationController {
     return this.session?.schedule[this.session.nextEventIndex] || null;
   }
 
-  shouldDefer(app, event) {
+  shouldDefer(app, event, time) {
     const profile = this.session.profile;
     if (event.overlapToken < profile.overlapShare) return 0;
     const sector = typeof app.activeSector === 'function' ? app.activeSector() : null;
     const player = app.race?.player;
     if (!sector || !player || player.speed < 20) return 0;
 
-    const toCommit = (sector.commitZ - player.z) / player.speed;
-    const toGate = (sector.gateZ - player.z) / player.speed;
+    const activationHorizon = Math.max(0, event.activationAt - time);
+    const toCommit = (sector.commitZ - player.z) / player.speed - activationHorizon;
+    const toGate = (sector.gateZ - player.z) / player.speed - activationHorizon;
     const nearCommit = toCommit > -0.55 && toCommit < profile.commitmentGuard;
     const nearGate = toGate > -0.45 && toGate < profile.gateGuard;
     const collisionRecovery = player.flash > 0.03;
@@ -604,7 +610,12 @@ export class ControlRelationController {
     if (nearGate && toGate > 0) delay = toGate + 0.75;
     else if (nearCommit && toCommit > 0) delay = Math.min(toCommit + 0.85, profile.maxDeferral);
     if (collisionRecovery) delay = Math.max(delay, 0.8);
-    return clamp(delay, 0.35, profile.maxDeferral - event.deferredBy);
+
+    const lastActivation = this.session.events.at(-1)?.activatedAt ?? 0;
+    const cadenceHeadroom = Math.max(0, HARD_MAX_INTERVAL - (event.activationAt - lastActivation));
+    const remaining = Math.max(0, Math.min(profile.maxDeferral - event.deferredBy, cadenceHeadroom));
+    if (remaining <= 0.05) return 0;
+    return Math.min(remaining, Math.max(Math.min(0.35, remaining), delay));
   }
 
   deferCurrentEvent(delay) {
@@ -614,7 +625,14 @@ export class ControlRelationController {
       this.session.schedule[index].cueAt = round(this.session.schedule[index].cueAt + delay, 3);
     }
     const event = this.eventDue();
+    if (!event) return;
     event.deferredBy = round(event.deferredBy + delay, 3);
+    event.cueStarted = false;
+    event.preCueTrace = [];
+    event.preCueLastTraceAt = -Infinity;
+    delete event.cueStartedAt;
+    delete event.preCueReference;
+    delete event.preCueReferenceCapturedAt;
   }
 
   deriveReference(app) {
@@ -643,10 +661,59 @@ export class ControlRelationController {
     return { vector: [0, 0], source: 'insufficient-signal', eligible: false, stability: 0 };
   }
 
+  recordCueTrace(event, raw, app, time) {
+    if (!event?.cueStarted || event.activated) return;
+    if (time - (event.preCueLastTraceAt ?? -Infinity) < 1 / 12) return;
+    const player = app.race?.player;
+    const sector = typeof app.activeSector === 'function' ? app.activeSector() : null;
+    event.preCueTrace ||= [];
+    event.preCueTrace.push({
+      t: round(time - event.activationAt, 3),
+      raw: raw.map((value) => round(value, 3)),
+      mapped: applyControlMapping(this.currentMapping, raw).map((value) => round(value, 3)),
+      position: player ? [round(player.x, 2), round(player.y, 2), round(player.z, 2)] : null,
+      velocity: player ? [round(player.vx, 2), round(player.vy, 2), round(player.speed, 2)] : null,
+      sector: sector ? sector.index + 1 : null,
+      committed: Boolean(sector?.committed),
+    });
+    event.preCueLastTraceAt = time;
+  }
+
+  detectAnticipation(event, reference, oldMapping, newMapping) {
+    if (!reference.eligible || !event.preCueTrace?.length) return null;
+    let hold = 0;
+    let previousTime = null;
+    for (const sample of event.preCueTrace) {
+      if (sample.t > 0 || magnitude(sample.raw) < 0.28) {
+        hold = 0;
+        previousTime = sample.t;
+        continue;
+      }
+      const classification = classifyControlResponse({
+        raw: sample.raw,
+        reference: reference.vector,
+        oldMapping,
+        newMapping,
+      });
+      const delta = previousTime === null ? 0 : Math.max(0, sample.t - previousTime);
+      hold = classification.correct ? hold + delta : 0;
+      previousTime = sample.t;
+      if (hold >= 0.15) {
+        return {
+          correct: true,
+          leadTime: round(Math.max(0, -sample.t), 4),
+          category: classification.category,
+        };
+      }
+    }
+    return { correct: false, leadTime: null, category: 'no-stable-predictive-compensation' };
+  }
+
   activateEvent(event, app, time) {
     const oldMapping = this.currentMapping;
     const newMapping = getControlMapping(event.toId);
-    const reference = this.deriveReference(app);
+    const reference = event.preCueReference || this.deriveReference(app);
+    const anticipation = this.detectAnticipation(event, reference, oldMapping, newMapping);
     const activeRecord = {
       index: event.index,
       signature: event.signature,
@@ -671,7 +738,10 @@ export class ControlRelationController {
         source: reference.source,
         eligible: reference.eligible,
         stability: round(reference.stability),
+        capturedAt: event.preCueReferenceCapturedAt ?? round(time, 4),
       },
+      anticipation,
+      preCueTrace: event.preCueTrace || [],
       firstAction: null,
       recoveryTime: null,
       recoveryHold: 0,
@@ -846,11 +916,41 @@ export class ControlRelationController {
       return;
     }
 
-    if (event && time >= event.cueAt && !event.activated) this.updateCue(event, time);
+    if (event?.cueStarted && time >= event.cueAt && !event.activated) this.updateCue(event, time);
     else this.hideCue();
 
     const showMini = time <= this.session.persistentUntil;
     this.ui.mini?.classList.toggle('hidden', !showMini);
+  }
+
+  visualState(time = Number(this.getApp()?.gameTime) || 0) {
+    const event = this.eventDue();
+    if (!this.session || !event?.cueStarted || event.activated || time < event.cueAt) return null;
+    return {
+      fromId: event.fromId,
+      toId: event.toId,
+      family: event.family,
+      complexity: event.complexity,
+      encoding: event.encoding,
+      progress: clamp((time - event.cueAt) / event.cueDuration, 0, 1),
+      probes: event.probes,
+      secondsToActivation: Math.max(0, event.activationAt - time),
+    };
+  }
+
+  context(time = Number(this.getApp()?.gameTime) || 0) {
+    const active = this.currentActiveRecord();
+    const next = this.eventDue();
+    return {
+      mappingId: this.currentMapping.id,
+      family: this.currentMapping.family,
+      complexity: this.currentMapping.complexity,
+      switchIndex: active?.index ?? null,
+      secondsSinceSwitch: active ? round(Math.max(0, time - active.activatedAt), 4) : null,
+      cueActive: Boolean(next?.cueStarted && !next.activated && time >= next.cueAt),
+      secondsToChange: next ? round(Math.max(0, next.activationAt - time), 4) : null,
+      nextFamily: next?.family ?? null,
+    };
   }
 
   process(axis) {
@@ -873,8 +973,20 @@ export class ControlRelationController {
 
     let event = this.eventDue();
     if (event && time >= event.cueAt && !event.cueStarted) {
+      const delay = this.shouldDefer(app, event, time);
+      if (delay > 0.05) {
+        this.deferCurrentEvent(delay);
+        event = this.eventDue();
+      }
+    }
+
+    if (event && time >= event.cueAt && !event.cueStarted) {
       event.cueStarted = true;
       event.cueStartedAt = round(time, 4);
+      event.preCueReference = this.deriveReference(app);
+      event.preCueReferenceCapturedAt = round(time, 4);
+      event.preCueTrace = [];
+      event.preCueLastTraceAt = -Infinity;
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('impulse-control-relation-cue', {
           detail: { activationAt: event.activationAt, cueDuration: event.cueDuration, complexity: event.complexity },
@@ -882,9 +994,10 @@ export class ControlRelationController {
       }
     }
 
+    if (event?.cueStarted && !event.activated) this.recordCueTrace(event, raw, app, time);
+
     if (event && time >= event.activationAt && !event.activated) {
-      const remainingDeferral = this.session.profile.maxDeferral - event.deferredBy;
-      const delay = remainingDeferral > 0.05 ? this.shouldDefer(app, event) : 0;
+      const delay = this.shouldDefer(app, event, time);
       if (delay > 0.05) {
         this.deferCurrentEvent(delay);
         event = this.eventDue();
@@ -943,13 +1056,22 @@ export class ControlRelationController {
     const adaptationSlope = regressionSlope(adaptationSeries);
     const intervals = session.events.slice(1).map((event, index) => event.activatedAt - session.events[index].activatedAt);
 
-    const accuracyComponent = firstActionAccuracy === null ? 0.5 : firstActionAccuracy;
-    const latencyComponent = medianLatency === null ? 0.5 : clamp(1 - (medianLatency - 0.15) / 1.85, 0, 1);
-    const recoveryComponent = medianRecovery === null ? 0.5 : clamp(1 - medianRecovery / 2.8, 0, 1);
-    const costComponent = meanSwitchCost === null ? 0.5 : clamp(1 - meanSwitchCost / 1.35, 0, 1);
-    const noveltyComponent = ((transitionNovelty ?? 1) + (mappingCoverage ?? 1)) / 2;
-    const score = session.events.length
-      ? Math.round((accuracyComponent * 0.35 + latencyComponent * 0.20 + recoveryComponent * 0.20 + costComponent * 0.15 + noveltyComponent * 0.10) * 100)
+    const anticipatoryEvents = eligible.filter((event) => event.anticipation?.correct);
+    const anticipatoryRate = eligible.length ? anticipatoryEvents.length / eligible.length : null;
+    const anticipationLeads = anticipatoryEvents.map((event) => event.anticipation.leadTime).filter((value) => Number.isFinite(value));
+    const medianAnticipationLead = median(anticipationLeads);
+    const measurementCoverage = session.events.length ? eligible.length / session.events.length : null;
+    const evidenceQuality = mean([transitionNovelty, mappingCoverage, measurementCoverage].filter((value) => value !== null));
+
+    const components = [
+      { value: firstActionAccuracy, weight: 0.40 },
+      { value: medianLatency === null ? null : clamp(1 - (medianLatency - 0.15) / 1.85, 0, 1), weight: 0.22 },
+      { value: medianRecovery === null ? null : clamp(1 - medianRecovery / 2.8, 0, 1), weight: 0.22 },
+      { value: meanSwitchCost === null ? null : clamp(1 - meanSwitchCost / 1.35, 0, 1), weight: 0.16 },
+    ].filter((component) => component.value !== null);
+    const componentWeight = components.reduce((sum, component) => sum + component.weight, 0);
+    const score = eligible.length && componentWeight > 0
+      ? Math.round((components.reduce((sum, component) => sum + component.value * component.weight, 0) / componentWeight) * 100)
       : null;
 
     return {
@@ -962,6 +1084,10 @@ export class ControlRelationController {
       meanSwitchCost: meanSwitchCost === null ? null : round(meanSwitchCost),
       transitionNovelty: transitionNovelty === null ? null : round(transitionNovelty),
       mappingCoverage: mappingCoverage === null ? null : round(mappingCoverage),
+      measurementCoverage: measurementCoverage === null ? null : round(measurementCoverage),
+      evidenceQuality: evidenceQuality === null ? null : round(evidenceQuality),
+      anticipatoryCompensationRate: anticipatoryRate === null ? null : round(anticipatoryRate),
+      medianAnticipationLead: medianAnticipationLead === null ? null : round(medianAnticipationLead),
       adaptationSlope: adaptationSlope === null ? null : round(adaptationSlope),
       meanActualInterval: mean(intervals) === null ? null : round(mean(intervals)),
       intervalRange: intervals.length ? [round(Math.min(...intervals)), round(Math.max(...intervals))] : null,
@@ -998,16 +1124,20 @@ export class ControlRelationController {
 
   persistSession(summary) {
     if (typeof localStorage === 'undefined' || !this.session) return;
-    const stored = safeParse(localStorage.getItem(HISTORY_KEY), []);
-    const history = Array.isArray(stored) ? stored : [];
-    history.push({
-      sessionId: this.session.sessionId,
-      mode: this.session.mode,
-      completedAt: this.session.completedAt,
-      summary,
-      signatures: this.session.events.map((event) => event.signature),
-    });
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-40)));
+    try {
+      const stored = safeParse(localStorage.getItem(HISTORY_KEY), []);
+      const history = Array.isArray(stored) ? stored : [];
+      history.push({
+        sessionId: this.session.sessionId,
+        mode: this.session.mode,
+        completedAt: this.session.completedAt,
+        summary,
+        signatures: this.session.events.map((event) => event.signature),
+      });
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-40)));
+    } catch {
+      // Storage may be unavailable in privacy-restricted browser contexts.
+    }
   }
 
   finalizeSession(app) {
@@ -1016,6 +1146,7 @@ export class ControlRelationController {
     this.session.completedAt = Date.now();
     this.session.finalized = true;
     const summary = this.summarize(this.session);
+    this.session.summary = summary;
     this.lastSession = {
       ...this.session,
       schedule: this.session.schedule.map((event) => ({
@@ -1076,4 +1207,5 @@ export const CONTROL_RELATION_INTERNALS = Object.freeze({
   probeDirections: PROBE_DIRECTIONS.length,
   simpleMappings: SIMPLE_MAPPING_IDS.length,
   compoundMappings: COMPOUND_MAPPING_IDS.length,
+  hardMaxInterval: HARD_MAX_INTERVAL,
 });

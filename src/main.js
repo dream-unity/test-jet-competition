@@ -616,6 +616,7 @@ class ImpulseRun {
     sector.relationalCorrect = choice === sector.challenge.correctIndex;
     sector.decisionTime = Math.max(0, this.gameTime - (sector.seenAt ?? this.gameTime));
     sector.choiceErrorModel = candidate.errorModel;
+    sector.controlContextAtCommit = this.input.controlRelations?.context?.(this.gameTime) || null;
 
     this.showFeedback('TRAJECTORY COMMITTED', 'neutral', 1.0);
     this.audio.cue('gate');
@@ -634,6 +635,7 @@ class ImpulseRun {
     const precision = clamp(1 - distance / (GATE_RADIUS * 1.65), 0, 1) * (consistency ? 1 : 0.52);
     const speedRetention = clamp(player.speed / (race.config.baseSpeed * 1.2), 0, 1);
     const motorScore = clamp(precision * 0.82 + speedRetention * 0.18, 0, 1);
+    const controlContextAtGate = this.input.controlRelations?.context?.(this.gameTime) || null;
 
     sector.executed = true;
     sector.actualGate = actual.index;
@@ -661,6 +663,8 @@ class ImpulseRun {
       motorPrecision: motorScore,
       gateHit,
       speedAtGate: player.speed,
+      controlContextAtCommit: sector.controlContextAtCommit,
+      controlContextAtGate,
       timestamp: Date.now(),
     };
     race.records.push(record);
@@ -953,6 +957,7 @@ class ImpulseRun {
     });
     this.renderEnvironment(player);
     if (race) {
+      this.renderControlFrameHologram(player);
       this.renderRaceObjects();
       this.renderAiRacers();
     } else {
@@ -1003,6 +1008,130 @@ class ImpulseRun {
         });
       }
     }
+  }
+
+  renderControlFrameHologram(player) {
+    const state = this.input.controlRelations?.visualState?.(this.gameTime);
+    if (!state) return;
+
+    const renderer = this.renderer;
+    const entrance = smoothstep(clamp(state.progress * 4, 0, 1));
+    const exit = smoothstep(clamp((1 - state.progress) * 7, 0, 1));
+    const alpha = entrance * exit;
+    if (alpha <= 0.01) return;
+
+    const depth = 88 + state.encoding * 1.5;
+    const separation = 16 + (state.encoding % 3) * 1.5;
+    const y = player.y + 19 + Math.sin(this.worldTime * 1.7) * 0.5;
+    const z = player.z + depth;
+    const centers = [
+      [player.x - separation, y, z],
+      [player.x + separation, y, z],
+    ];
+    const frameColors = ['#55f7ff', '#ff4fd8'];
+    const probeColors = ['#55f7ff', '#ffd166'];
+    const radius = 10.2;
+
+    centers.forEach((center, index) => {
+      renderer.glow('torus', {
+        position: center,
+        scale: [radius, radius, 0.8],
+        color: frameColors[index],
+        alpha: alpha * 0.42,
+        emissive: 1,
+        depthWrite: false,
+      }, 0.18, 1.14);
+      renderer.draw('torus', {
+        position: center,
+        scale: [radius, radius, 0.8],
+        color: frameColors[index],
+        alpha: alpha * 0.56,
+        emissive: 1,
+        depthWrite: false,
+      });
+      renderer.drawBar([center[0] - 7.5, center[1], center[2]], [center[0] + 7.5, center[1], center[2]], 0.055, '#55f7ff', {
+        alpha: alpha * 0.24,
+        emissive: 1,
+        depthWrite: false,
+      });
+      renderer.drawBar([center[0], center[1] - 7.5, center[2]], [center[0], center[1] + 7.5, center[2]], 0.055, '#ffd166', {
+        alpha: alpha * 0.24,
+        emissive: 1,
+        depthWrite: false,
+      });
+    });
+
+    renderer.drawBar([centers[0][0] + radius, y, z], [centers[1][0] - radius, y, z], 0.075, '#ffd166', {
+      alpha: alpha * 0.42,
+      emissive: 1,
+      additive: true,
+      depthWrite: false,
+    });
+    const streamPhase = (this.worldTime * 1.9) % 1;
+    const streamPosition = V3.lerp(
+      [centers[0][0] + radius, y, z + 0.2],
+      [centers[1][0] - radius, y, z + 0.2],
+      streamPhase,
+    );
+    renderer.glow('octa', {
+      position: streamPosition,
+      scale: [0.45, 0.45, 0.45],
+      color: '#ffd166',
+      alpha: alpha * (0.45 + Math.sin(streamPhase * Math.PI) * 0.45),
+      emissive: 1,
+      depthWrite: false,
+    }, 0.22, 1.5);
+
+    const probeSets = [state.probes.input, state.probes.output];
+    for (let frameIndex = 0; frameIndex < 2; frameIndex += 1) {
+      const center = centers[frameIndex];
+      probeSets[frameIndex].forEach((vector, probeIndex) => {
+        const endpoint = [
+          center[0] + vector[0] * 7.2,
+          center[1] + vector[1] * 7.2,
+          center[2] + 0.35,
+        ];
+        renderer.drawBar(center, endpoint, 0.07, probeColors[probeIndex], {
+          alpha: alpha * 0.28,
+          emissive: 1,
+          additive: true,
+          depthWrite: false,
+        });
+        const cycle = (this.worldTime * 0.72 + probeIndex * 0.5) % 1;
+        const travel = smoothstep(clamp(cycle / 0.78, 0, 1));
+        const marker = V3.lerp(center, endpoint, travel);
+        const markerAlpha = alpha * Math.sin(clamp(cycle / 0.92, 0, 1) * Math.PI);
+        renderer.glow('octa', {
+          position: marker,
+          rotation: [this.worldTime * 0.8, this.worldTime * 0.55, 0],
+          scale: [0.72, 0.72, 0.72],
+          color: probeColors[probeIndex],
+          alpha: markerAlpha,
+          emissive: 1,
+          depthWrite: false,
+        }, 0.24, 1.42);
+        renderer.draw('octa', {
+          position: marker,
+          rotation: [this.worldTime * 0.8, this.worldTime * 0.55, 0],
+          scale: [0.52, 0.52, 0.52],
+          color: probeColors[probeIndex],
+          alpha: markerAlpha,
+          emissive: 1,
+          depthWrite: false,
+        });
+      });
+    }
+
+    const activationPulse = 1 + state.progress * 0.16 + Math.sin(this.worldTime * 7) * 0.025;
+    renderer.draw('torus', {
+      position: [player.x, y, z - 0.2],
+      scale: [2.2 * activationPulse, 2.2 * activationPulse, 0.45],
+      color: '#ffd166',
+      alpha: alpha * (0.28 + state.progress * 0.45),
+      emissive: 1,
+      additive: true,
+      depthWrite: false,
+    });
   }
 
   renderCitySegment(segment, z) {
