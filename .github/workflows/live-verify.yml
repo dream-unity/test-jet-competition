@@ -25,7 +25,7 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Wait for live files to exactly match tested source
+      - name: Wait for live endogenous racing files to exactly match tested source
         shell: bash
         env:
           PAGE_URL: https://dream-unity.github.io/test-jet-competition
@@ -40,6 +40,8 @@ jobs:
             src/relational.js
             src/control-relations.js
             src/systems.js
+            src/world-relations.js
+            src/world-racing.js
           )
           mkdir -p /tmp/live/src
           matched='false'
@@ -65,8 +67,14 @@ jobs:
           done
           test "$matched" = 'true'
           grep -q '<title>Impulse Run' /tmp/live/index.html
-          grep -q 'controlRelationSystem' /tmp/live/index.html
-          grep -q 'generateControlSchedule' /tmp/live/src/control-relations.js
+          grep -q 'src/world-racing.js' /tmp/live/index.html
+          grep -q 'generateWorldSchedule' /tmp/live/src/world-relations.js
+          grep -q 'reasoningDrive' /tmp/live/src/world-racing.js
+          grep -q 'moving-frame-field' /tmp/live/src/world-racing.js
+          if grep -q 'correctIndex\|candidate\.pattern\|renderPattern(' /tmp/live/src/world-racing.js; then
+            echo 'Active endogenous runtime unexpectedly contains picture-answer logic.' >&2
+            exit 1
+          fi
           sha256sum \
             /tmp/live/index.html \
             /tmp/live/styles.css \
@@ -89,12 +97,14 @@ jobs:
           receipt = {
               'game': 'Impulse Run',
               'deployment': 'verified-live',
+              'architecture': 'endogenous-relational-racing-v2',
               'page_url': os.environ['PAGE_URL'],
               'source_sha': os.environ['SOURCE_SHA'],
               'files_compared': [
                   'index.html', 'styles.css', 'control-relations.css',
                   'src/main.js', 'src/renderer.js', 'src/relational.js',
-                  'src/control-relations.js', 'src/systems.js'
+                  'src/control-relations.js', 'src/systems.js',
+                  'src/world-relations.js', 'src/world-racing.js'
               ],
               'sha256': Path('/tmp/live-checksums.txt').read_text(encoding='utf-8').splitlines(),
               'verified_at': datetime.now(timezone.utc).isoformat(),
