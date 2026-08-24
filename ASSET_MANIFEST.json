@@ -1,18 +1,21 @@
 {
-  "schema": "dream-unity.asset-manifest.v1",
+  "schema": "dream-unity.asset-manifest.v2",
   "game": "Impulse Run",
   "external_assets": [],
   "runtime_dependencies": [],
   "procedural_assets": [
     "fighter-jet meshes",
     "AI racer meshes",
-    "relational formations",
-    "gate geometry",
+    "aerodynamic wake strands",
+    "rotating reference structures",
+    "formation-relation geometry",
+    "environmental control-frame fields",
+    "temporal boundary geometry",
     "course structures",
     "cityscape",
     "star field",
-    "control-frame transformation cues",
+    "speed and thrust effects",
     "sound synthesis"
   ],
-  "notes": "All visual geometry, control-frame demonstrations and audio are generated at runtime from original code in this repository. No remote assets, fonts, analytics or runtime libraries are loaded."
+  "notes": "All race geometry, relational-world evidence, environmental control-frame transformations and audio are generated at runtime from original code in this repository. The active gameplay uses no remote assets, fonts, analytics, runtime libraries or picture-answer puzzle assets."
 }
