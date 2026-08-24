@@ -1,24 +1,42 @@
 {
   "game": "Impulse Run",
-  "source_sha": "480b462f5757a2a35dae3581f6d4ea74802c729f",
+  "source_sha": "10d9b10d073bda0970a5b88f1db071ae8da5bdab",
   "tests": "passed",
-  "pages_before_http_code": "404",
+  "pages_before_http_code": "200",
   "pages_before_response": {
-    "message": "Not Found",
-    "documentation_url": "https://docs.github.com/rest/pages/pages#get-a-apiname-pages-site",
-    "status": "404"
+    "url": "https://api.github.com/repos/dream-unity/test-jet-competition/pages",
+    "status": "built",
+    "cname": null,
+    "custom_404": false,
+    "html_url": "https://dream-unity.github.io/test-jet-competition/",
+    "build_type": "legacy",
+    "source": {
+      "branch": "gh-pages",
+      "path": "/"
+    },
+    "public": true,
+    "protected_domain_state": null,
+    "pending_domain_unverified_at": null,
+    "https_enforced": true
   },
-  "pages_create_http_code": "403",
-  "pages_create_response": {
-    "message": "Resource not accessible by integration",
-    "documentation_url": "https://docs.github.com/rest/pages/pages#create-a-apiname-pages-site",
-    "status": "403"
-  },
-  "pages_after_http_code": "404",
+  "pages_create_http_code": "not-needed",
+  "pages_create_response": {},
+  "pages_after_http_code": "200",
   "pages_after_response": {
-    "message": "Not Found",
-    "documentation_url": "https://docs.github.com/rest/pages/pages#get-a-apiname-pages-site",
-    "status": "404"
+    "url": "https://api.github.com/repos/dream-unity/test-jet-competition/pages",
+    "status": "built",
+    "cname": null,
+    "custom_404": false,
+    "html_url": "https://dream-unity.github.io/test-jet-competition/",
+    "build_type": "legacy",
+    "source": {
+      "branch": "gh-pages",
+      "path": "/"
+    },
+    "public": true,
+    "protected_domain_state": null,
+    "pending_domain_unverified_at": null,
+    "https_enforced": true
   },
-  "recorded_at": "2026-08-24T11:40:05.589662+00:00"
+  "recorded_at": "2026-08-24T11:41:45.785789+00:00"
 }
