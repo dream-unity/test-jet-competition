@@ -1,97 +1,136 @@
 # Impulse Run
 
-**Dream Unity — visual relational fighter-jet racing**
+**Dream Unity — endogenous relational fighter-jet racing**
 
 [Play the deployed GitHub Pages game](https://dream-unity.github.io/test-jet-competition/)
 
-Impulse Run is a dependency-free browser-native 3D racing game in which the player watches a visual transformation, transfers that relationship to a new formation, and commits by flying through the matching corridor. No symbolic premises are presented: the flight path itself is the answer.
+Impulse Run is a dependency-free browser-native 3D fighter-jet competition in which relational reasoning is part of the race itself. There are no picture-answer gates in the active gameplay. Opponents, wakes, rotating structures, formations, moving reference frames and temporal race events create the reasoning problem; the player's continuous flight trajectory is the response.
 
-The steering frame now also becomes part of the relational environment. At seeded, irregular intervals, a pair of moving visual correspondences demonstrates how input motion will transform into aircraft motion. The player must infer the new control-to-outcome relation and adapt in flight. Boost, brake and pause remain stable so the manipulation trains spatial control-frame reasoning rather than arbitrary button memorisation.
+## Design principle
 
-## Core loop
+**Observe race dynamics → infer relationships → predict their transformation → commit a trajectory → experience physical consequence → update the model → compete.**
 
-**See → visually relate → anticipate → commit trajectory → fly**
+The game deliberately avoids the structure "solve an analogy, select a picture, resume racing." Instead it implements analogous relational operations through concrete flight dynamics. Absolute colour, side, vehicle identity and course position are procedurally varied so that a single superficial feature cannot reliably predict the fastest line.
 
-Each race interleaves high-speed arcade flight with procedurally generated visual analogies. The challenge engine varies geometry, orientation, scale, depth, motion, reference frame, attribute mapping, candidate layout and operation composition. Incorrect corridors are generated from explicit processing-error models, including inverse transformations, wrong axes, reversed trajectories, incomplete compositions, surface-only matches and reference-frame substitutions.
+## Relational racing families
 
-## Dynamic control-frame reasoning
+The endogenous world generator currently produces eight families:
 
-The control-remapping layer uses the eight orthogonal symmetries of a square control plane:
+- **Slipstream intercept** — predict a competitor's future wake-relative opportunity rather than chase its current position.
+- **Wake intersection** — reason over the relative motion of two competitors and intercept the future relation between their wakes.
+- **Rotating frame** — transform a racer-relative position through a visibly rotating environmental frame.
+- **Formation geometry** — mirror or reposition relative to a leader/wing relationship that changes as race order changes.
+- **Moving reference frame** — fly through a rotating/reflected field whose orientation transforms both useful trajectory and steering consequences.
+- **Temporal intercept** — act inside a window defined by the ordering of competitor crossings, not by a fixed countdown.
+- **Composed intercept** — combine prediction, rotation/reflection and offset relations into a single trajectory.
+- **Competitive role shift** — the reference competitor is defined by live race order, so overtaking can change the reasoning problem itself.
 
-- stable identity mapping;
+Every family generates continuous target trajectories and plausible diagnostic alternatives such as current-state chasing, inverse relations, world-frame substitution, stale-reference tracking, single-racer capture, incomplete composition and temporal-order errors. These labels exist only in telemetry; the player experiences flight consequences rather than test-answer labels.
+
+## Reasoning is engine performance
+
+Race position is the principal behavioural consequence of relational performance.
+
+A correctly inferred trajectory:
+
+- adds an immediate thrust impulse;
+- increases a persistent reasoning-drive term;
+- regenerates boost;
+- builds a correct-inference streak that strengthens overtaking opportunities.
+
+A wrong relational model:
+
+- applies immediate aerodynamic drag;
+- decreases persistent reasoning drive;
+- drains some boost;
+- resets the reasoning streak, allowing competitors to pull away.
+
+The consequence is intentionally physical rather than a detached `+100` score. Strong relational performance makes the aircraft faster; repeated errors progressively cost competitive position.
+
+## AI competitors are relational variables and competitors
+
+The five AI racers are not merely decoration. Their live position, velocity and race order are inputs to the player's relational state. The same race world also drives each AI pilot's decision model through separate reasoning accuracy and inference latency.
+
+To prevent answer leakage, AI competitors do not begin steering toward their inferred relational line until the player's trajectory has been committed. Afterwards, a strong AI may exploit the correct relation and accelerate, while another may commit to a diagnostic wrong model and lose speed. This makes reasoning visible through race dynamics without showing an answer key.
+
+## Environmental control-frame reasoning
+
+The earlier arbitrary 16–30 second remapping schedule is bypassed in active gameplay. Steering transformations now occur only inside **visible moving-frame fields** that are part of the race environment.
+
+The field geometry specifies a member of the eight magnitude-preserving D4 control mappings:
+
+- identity;
 - horizontal or vertical reflection;
 - 180-degree rotation;
 - clockwise or counter-clockwise quarter rotation;
 - diagonal or anti-diagonal axis exchange.
 
-Every mapping preserves input magnitude, so only the relation between control direction and flight direction changes. Before activation, two non-collinear moving probes directly demonstrate the upcoming transformation in both a high-legibility HUD frame and a player-relative in-course hologram. Their directions, presentation encoding, mapping transition and timing are procedurally varied; no verbal rule or logic premise is shown.
+The player therefore reasons over:
 
-Cadence is mode-specific but always bounded between 16 and 30 seconds after the first change:
+**field orientation × aircraft trajectory × control input → resulting movement.**
 
-- **Vector Training:** 24–30 seconds, long cue, mainly single-relation remaps and a longer visual reference.
-- **Relational Grand Prix:** 18–26 seconds, approximately 22-second centre, 70/30 simple-to-compound balance.
-- **Assessment Run:** 19–25 seconds, counterbalanced mapping exposure and guarded measurement windows around corridor commitment.
-- **Transfer Trial:** 16–24 seconds, short references and a majority of compound rotations or axis exchanges.
-
-A seeded triangular-jitter schedule prevents rhythmic anticipation. Immediate mapping repetition is prohibited, exposure is balanced, recent transition signatures are penalised, and cross-session cue signatures are retained locally so subsequent runs can avoid recently encountered configurations.
-
-## Control-frame assessment channel
-
-Control-frame adaptation is measured separately from corridor reasoning and ordinary flight execution. Each switch can record:
-
-- mapping family, complexity, cue duration, actual interval and any fairness deferral;
-- visual probe correspondences and transition novelty signature;
-- pre-switch trajectory reference and its measurement eligibility;
-- pre-activation trajectory reference, predictive compensation, first meaningful action, inference latency and first-action correctness;
-- old-frame perseveration, inverse response, axis exchange, exploratory response or response inhibition;
-- recovery time, switch cost, integrated control error and a short 12 Hz trajectory trace;
-- mapping/family exposure, adaptation trend, transition novelty and cross-session schedule history.
-
-Assessment and Training guard switches that would otherwise occur immediately around commitment or gate execution. Grand Prix allows a bounded proportion of overlaps, and Transfer Trial permits more deliberate interference. This preserves interpretable measurement while retaining real-time relational inference under pressure.
-
-The session export uses `dream-unity.impulse-run.telemetry.v2` and includes three analytically separate channels: corridor-relation records, piloting records and control-frame records.
-
-## Relational integrity
-
-- Seven corridor challenge families: rotation, reflection, relative trajectory, scale/offset, operation composition, reference-frame transfer and structural remapping.
-- Twenty-four orientation frames, twenty-three non-identity cube rotations and twenty-four reflection matrices.
-- Eight orthogonal control-frame mappings with deterministic, machine-tested inversion and magnitude preservation.
-- Deterministic seeded generation with machine-validated unique candidate solutions.
-- Session and cross-session novelty tracking to reduce item memorisation and practice effects.
-- Three-, four- and five-corridor layouts spanning horizontal, vertical, diagonal, diamond, square, cross and pentagonal flight choices.
-- Adaptive difficulty in Grand Prix and Training modes; balanced fixed difficulty in Assessment; high-novelty parameter distributions in Transfer Trial.
-- AI competitors cannot select or enter their answer corridor until the player’s trajectory has been committed.
+Boost, brake and pause remain stable. The control transformation is applied consistently to keyboard, mouse, gamepad and touchscreen steering. First-action correctness, old-frame perseveration, compensation latency and recovery are recorded separately from route inference and ordinary piloting.
 
 ## Separate measurement channels
 
-The commitment plane records the player’s selected corridor and decision latency before the gate is reached. At the gate plane, the game separately records trajectory consistency, distance from the committed corridor centre, speed retention, gate passage and collision outcomes. A player can therefore reason incorrectly but pilot the chosen path precisely, or reason correctly but execute it poorly; the two outcomes remain distinct.
+The game separates three kinds of performance:
 
-Control-frame switches form a third channel. They are scored from the player’s adaptation to the changing sensorimotor relation, not from corridor correctness or raw race position. Data remains in local browser storage unless the player explicitly exports a session JSON file. The game does not claim clinical or validated general-intelligence measurement.
+1. **Relational trajectory inference** — whether the player's committed projected trajectory matches the live relational solution rather than a meaningful error model.
+2. **Piloting execution** — how consistently and accurately the player flies the trajectory after commitment, including dynamic tracking error.
+3. **Environmental control-frame adaptation** — how rapidly and correctly steering is transformed inside moving reference-frame fields.
+
+Telemetry also records family, live reference racers, inference latency, commitment confidence margin, error topology, motor precision, control context, speed consequence, reasoning drive and novelty signature. This supports within-game assessment and error analysis without claiming that the game is already a clinically validated IQ test.
+
+## Difficulty and practice-effect resistance
+
+Difficulty increases structurally rather than merely by increasing speed. Runs progress from single moving relations toward reference-frame changes, role switching, temporal-spatial integration and multi-stage composition. Transfer mode biases toward unfamiliar dynamic and composed relationships.
+
+Practice-effect controls include:
+
+- deterministic-but-seeded procedural generation;
+- randomized polarity, phase, orientation, radius, offset and prediction horizon;
+- randomized live competitor roles and race-order references;
+- reflected and rotated environmental frames;
+- cross-session novelty signatures stored locally;
+- counterbalanced lateral solutions so "always go left/right" cannot become a shortcut;
+- continuous target geometry instead of a memorisable finite answer bank;
+- live targets that change with opponents, making identical-looking course geometry insufficient to solve the relation.
 
 ## Racing systems
 
-- Responsive arcade flight with pitch/yaw steering, visible roll, afterburner energy, air brake, shield and speed loss from collisions.
-- Six-racer field with overtaking, catch-up dynamics, shared challenge sectors and non-revealing AI commitment logic.
-- Chase camera, speed-sensitive field of view, procedural neon city course, moving hazards, boost rings, checkpoints, race position and timing.
-- Keyboard, mouse-drag, gamepad and multitouch controls.
+- Responsive arcade fighter-jet flight with pitch/yaw steering, visible roll, boost, air brake, shield and collision speed loss.
+- Six-racer field with overtaking and catch-up dynamics.
+- Chase camera and speed-sensitive field of view.
+- Procedural neon city course, moving hazards, rotating structures, wake geometry and temporal boundaries.
+- Desktop keyboard/mouse, gamepad and multitouch controls.
 - Four modes: Relational Grand Prix, Vector Training, Assessment Run and Transfer Trial.
-- Synthesised engine, boost, collision, relation-cue and control-shift audio with no downloaded media.
+- Synthesised engine, boost, collision and feedback audio with no downloaded media.
 
 ## Controls
 
 ### Desktop
 
-- **WASD / arrow keys:** steer horizontally and vertically through the currently active control frame
-- **Q / E:** manual visual roll input
-- **Shift:** boost; never remapped
-- **Space:** air brake; never remapped
-- **Mouse drag:** direct steering through the current frame
-- **Escape / P:** pause; never remapped
-- **Gamepad:** left stick steer, face/trigger buttons boost and brake
+- **WASD / arrow keys:** steer horizontally and vertically
+- **Q / E:** manual visual roll
+- **Shift:** boost
+- **Space:** air brake
+- **Mouse drag:** direct steering
+- **Escape / P:** pause
+- **Gamepad:** left stick steer; face/trigger buttons boost and brake
 
 ### Mobile
 
-Use the left virtual flight stick and the right Boost and Brake controls. Touch controls respect display safe areas and support simultaneous input. The same control-frame transformation is applied consistently to keyboard, mouse, gamepad and touch steering.
+Use the left virtual flight stick and the right Boost and Brake controls. Inside a moving-frame field, the same environmental transformation is applied to all steering devices.
+
+## Architecture
+
+- `src/main.js` — underlying flight/race/render orchestration retained as the stable engine substrate.
+- `src/world-relations.js` — deterministic endogenous relational-world generator and continuous solution/error geometry.
+- `src/world-racing.js` — active gameplay layer replacing picture-puzzle sectors with world-coupled relational racing, reasoning-driven engine consequences, relational AI and environmental control fields.
+- `src/renderer.js` — dependency-free WebGL renderer.
+- `src/systems.js` — input and synthesized audio.
+- `src/control-relations.js` — legacy control-relation library retained for compatibility/testing; its timed schedule is bypassed by the active endogenous runtime.
+- `tests/world-relations.test.mjs` — stress tests for deterministic generation, family coverage, D4 control mappings, target bounds, lateral counterbalancing and absence of picture-answer logic in the active runtime.
 
 ## Development and validation
 
@@ -101,14 +140,16 @@ There is no build step and no runtime dependency. Serve the repository root over
 python3 -m http.server 8080
 ```
 
-Run deterministic stress and deployment validation:
+Run the full deterministic validation suite:
 
 ```bash
 npm test
 ```
 
-The suite generates and validates more than 1,800 corridor challenges, validates all eight control mappings, stress-tests deterministic schedules across every mode, verifies bounded jitter, cue correctness, mapping coverage, cross-session novelty avoidance and diagnostic response topology, syntax-checks every module, rejects root-absolute or remote runtime assets, and validates the asset manifest.
+The tests cover the original flight/renderer substrate plus the endogenous relational-racing model, including hundreds of seeded schedules, all eight world-relation families, all eight control transformations, bounded live targets, diagnostic alternatives, structural novelty, left/right counterbalancing, syntax validity and repository-relative static deployment.
 
 ## Deployment
 
-`.github/workflows/pages.yml` validates the game and deploys the repository root to GitHub Pages on every push to `main`. Official GitHub Actions are pinned to immutable commit hashes. The live-verification workflow compares the deployed HTML, both CSS files and every JavaScript module byte-for-byte against the tested source. The site uses repository-relative paths and requires no backend.
+`.github/workflows/pages.yml` validates the game and deploys the repository root to GitHub Pages on pushes to `main`. The application uses repository-relative paths and has no backend or runtime third-party dependency.
+
+Performance telemetry is experimental. The architecture is designed to maximize relational-reasoning training and assessment potential, but general-intelligence transfer and psychometric validity require controlled empirical validation.
