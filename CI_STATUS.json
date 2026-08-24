@@ -1,6 +1,6 @@
 {
   "game": "Impulse Run",
-  "source_sha": "47ef0a62c838307b44d872caf519bd2c289b5532",
+  "source_sha": "7101e7ec8b64902926caccb999fa5d586de340ad",
   "tests": "passed",
   "pages_before_http_code": "200",
   "pages_before_response": {
@@ -24,7 +24,7 @@
   "pages_after_http_code": "200",
   "pages_after_response": {
     "url": "https://api.github.com/repos/dream-unity/test-jet-competition/pages",
-    "status": "built",
+    "status": "building",
     "cname": null,
     "custom_404": false,
     "html_url": "https://dream-unity.github.io/test-jet-competition/",
@@ -38,5 +38,5 @@
     "pending_domain_unverified_at": null,
     "https_enforced": true
   },
-  "recorded_at": "2026-08-24T11:42:48.647163+00:00"
+  "recorded_at": "2026-08-24T11:44:13.339954+00:00"
 }
