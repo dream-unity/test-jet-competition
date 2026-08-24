@@ -4,9 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <meta name="theme-color" content="#050914">
-  <meta name="description" content="Impulse Run — a 3D fighter-jet racing game where visual relational reasoning determines the racing line.">
+  <meta name="description" content="Impulse Run — a 3D fighter-jet racing game where visual relational reasoning determines the racing line and the control frame itself transforms.">
   <title>Impulse Run — Dream Unity</title>
   <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./control-relations.css">
 </head>
 <body>
   <div id="app">
@@ -40,6 +41,32 @@
       <i></i><span id="challengeFamily">VISUAL RELATION</span><i></i>
     </div>
 
+    <div id="controlRelationSystem" class="control-relation-system hidden" aria-hidden="true">
+      <div id="controlRelationCue" class="control-relation-cue">
+        <div class="cr-frame cr-input-frame">
+          <i class="cr-axis-x"></i><i class="cr-axis-y"></i>
+          <b class="cr-probe cr-probe-a"></b><b class="cr-probe cr-probe-b"></b>
+        </div>
+        <div class="cr-stream"><i></i><i></i><i></i></div>
+        <div class="cr-frame cr-output-frame">
+          <i class="cr-axis-x"></i><i class="cr-axis-y"></i>
+          <b class="cr-probe cr-probe-a"></b><b class="cr-probe cr-probe-b"></b>
+        </div>
+        <div id="controlRelationCountdown" class="cr-countdown"></div>
+      </div>
+      <div id="controlRelationMini" class="control-relation-mini hidden">
+        <div class="cr-frame cr-mini-input">
+          <i class="cr-axis-x"></i><i class="cr-axis-y"></i>
+          <b class="cr-probe cr-probe-a"></b><b class="cr-probe cr-probe-b"></b>
+        </div>
+        <div class="cr-mini-stream"></div>
+        <div class="cr-frame cr-mini-output">
+          <i class="cr-axis-x"></i><i class="cr-axis-y"></i>
+          <b class="cr-probe cr-probe-a"></b><b class="cr-probe cr-probe-b"></b>
+        </div>
+      </div>
+    </div>
+
     <div id="feedback" class="feedback hidden" role="status"></div>
     <div id="countdown" class="countdown hidden" aria-live="assertive"></div>
 
@@ -48,28 +75,28 @@
         <div class="menu-kicker">DREAM UNITY // 03</div>
         <h1>IMPULSE <span>RUN</span></h1>
         <p class="menu-subtitle">See → visually relate → anticipate → commit trajectory → fly.</p>
-        <p class="menu-copy">Watch a formation change, transfer that relationship to a new formation, then fly through the corridor that preserves it. Your flight path is the answer.</p>
+        <p class="menu-copy">Watch a formation change, transfer that relationship to a new formation, then fly through the corridor that preserves it. During flight, the steering frame itself periodically transforms: infer the new control-to-motion relationship from the moving visual demonstration.</p>
 
         <div class="mode-grid" role="group" aria-label="Race mode">
           <button class="mode-card selected" data-mode="grand-prix">
             <span class="mode-index">01</span>
             <strong>RELATIONAL GRAND PRIX</strong>
-            <small>Adaptive visual inference, six racers, immediate split feedback.</small>
+            <small>Adaptive visual inference, transformed control frames and six-racer pressure.</small>
           </button>
           <button class="mode-card" data-mode="training">
             <span class="mode-index">02</span>
             <strong>VECTOR TRAINING</strong>
-            <small>Slower entry speed, tutorial guidance, targeted error feedback.</small>
+            <small>Longer visual cues, simpler remaps and extended frame reference.</small>
           </button>
           <button class="mode-card" data-mode="assessment">
             <span class="mode-index">03</span>
             <strong>ASSESSMENT RUN</strong>
-            <small>Balanced difficulty and withheld feedback until the finish.</small>
+            <small>Counterbalanced remaps, guarded measurement windows and withheld feedback.</small>
           </button>
           <button class="mode-card" data-mode="transfer">
             <span class="mode-index">04</span>
             <strong>TRANSFER TRIAL</strong>
-            <small>Novel frames, compositions and encodings resistant to memorisation.</small>
+            <small>Unseen compound rotations, reflections and axis exchanges under pressure.</small>
           </button>
         </div>
 
@@ -80,9 +107,10 @@
         </div>
         <div class="control-strip">
           <span><b>DESKTOP</b> WASD / arrows steer · Shift boost · Space brake · mouse-drag supported</span>
-          <span><b>MOBILE</b> left flight stick · boost and brake controls</span>
+          <span><b>MOBILE</b> left flight stick · boost and brake remain stable while steering remaps</span>
+          <span><b>CONTROL FRAME</b> visually transforms at seeded 16–30 second intervals; the two moving correspondences specify the new relationship</span>
         </div>
-        <p class="disclaimer">Relational choice and flight execution are recorded separately. Performance telemetry is experimental and is not a clinical IQ measure.</p>
+        <p class="disclaimer">Corridor reasoning, control-frame adaptation and flight execution are recorded as separate channels. Performance telemetry is experimental and is not a clinical IQ measure.</p>
       </div>
     </section>
 
@@ -103,6 +131,7 @@
         <div class="result-summary">
           <div class="result-ring relation-ring"><strong id="resultRelation">0%</strong><span>RELATIONAL</span></div>
           <div class="result-ring pilot-ring"><strong id="resultPilot">0%</strong><span>PILOTING</span></div>
+          <div class="result-ring control-ring"><strong id="resultControlRelation">—</strong><span>CONTROL FRAME</span></div>
           <div class="result-ring"><strong id="resultPosition">1 / 6</strong><span>FINISH</span></div>
         </div>
         <div class="result-grid">
@@ -114,6 +143,21 @@
           <div><span>Race time</span><strong id="resultTime">00:00.0</strong></div>
         </div>
         <div id="familyBreakdown" class="family-breakdown"></div>
+
+        <section id="controlRelationResults" class="control-relation-results hidden">
+          <div class="control-result-heading"><span>Dynamic control-frame relation</span><strong id="controlFrameScore">—</strong></div>
+          <div class="result-grid control-result-grid">
+            <div><span>Frame switches</span><strong id="controlSwitches">0</strong></div>
+            <div><span>First-action accuracy</span><strong id="controlFirstAction">—</strong></div>
+            <div><span>Median inference</span><strong id="controlInferenceLatency">—</strong></div>
+            <div><span>Median recovery</span><strong id="controlRecovery">—</strong></div>
+            <div><span>Mean switch cost</span><strong id="controlSwitchCost">—</strong></div>
+            <div><span>Transition novelty</span><strong id="controlTransitionNovelty">—</strong></div>
+            <div><span>Adaptation trend</span><strong id="controlAdaptation">—</strong></div>
+          </div>
+          <div id="controlErrorTopology" class="family-breakdown control-error-topology"></div>
+        </section>
+
         <div class="result-actions">
           <button id="runAgainButton" class="primary-button">RUN AGAIN</button>
           <button id="exportButton" class="secondary-button">EXPORT TELEMETRY</button>
