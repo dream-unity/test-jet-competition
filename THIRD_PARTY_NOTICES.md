@@ -1,5 +1,5 @@
 # Third-Party Notices
 
-Impulse Run has no third-party runtime libraries, fonts, models, textures, audio files or other shipped media assets.
+The active Apex Relational Racing runtime has no third-party runtime libraries, downloaded models, textures, audio, fonts or analytics dependencies.
 
-The GitHub Actions workflow uses official GitHub-maintained actions, pinned to immutable commit hashes. Those actions execute only in repository automation and are not included in the deployed game.
+GitHub Actions used for repository validation and deployment are GitHub-hosted workflow components and are pinned to immutable commit identifiers in the workflow files.

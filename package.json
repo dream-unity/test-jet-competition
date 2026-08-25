@@ -1,14 +1,13 @@
 {
-  "name": "dream-unity-impulse-run",
-  "version": "2.0.0",
+  "name": "dream-unity-apex-relational-racing",
+  "version": "4.0.0",
   "private": true,
   "type": "module",
-  "description": "Dependency-free 3D fighter-jet competition where relational reasoning is embodied in trajectories, wakes, formations, moving frames and race dynamics.",
+  "description": "Self-contained 3D fighter-jet relational racing with quaternion flight, causal world reasoning and trajectory-model assessment.",
   "scripts": {
-    "test": "node tests/relational.test.mjs && node tests/control-relations.test.mjs && node tests/world-relations.test.mjs && node tests/renderer.test.mjs && node tests/static.test.mjs",
-    "test:relational": "node tests/relational.test.mjs && node tests/world-relations.test.mjs",
-    "test:world": "node tests/world-relations.test.mjs",
-    "test:controls": "node tests/control-relations.test.mjs",
+    "test": "node tests/fighter-flight.test.mjs && node tests/course3d.test.mjs && node tests/relational-racing-v4.test.mjs && node tests/relational-validity.test.mjs && node tests/fighter-visuals.test.mjs && node tests/static.test.mjs",
+    "test:flight": "node tests/fighter-flight.test.mjs && node tests/course3d.test.mjs && node tests/fighter-visuals.test.mjs",
+    "test:reasoning": "node tests/relational-racing-v4.test.mjs && node tests/relational-validity.test.mjs",
     "test:static": "node tests/static.test.mjs"
   },
   "engines": {

@@ -3,90 +3,79 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-  <meta name="theme-color" content="#050914">
-  <meta name="description" content="Impulse Run — a 3D fighter-jet competition where relational reasoning is embodied in trajectories, wakes, formations, moving frames and race dynamics.">
-  <title>Impulse Run — Dream Unity</title>
-  <link rel="stylesheet" href="./styles.css">
-  <link rel="stylesheet" href="./control-relations.css">
+  <meta name="theme-color" content="#040812">
+  <meta name="description" content="Apex Relational Racing — a full 3D fighter-jet competition where causal relational reasoning becomes thrust, drag and race position.">
+  <title>Apex Relational Racing — Dream Unity</title>
+  <link rel="stylesheet" href="./fighter-v4.css">
 </head>
 <body>
-  <div id="app">
-    <canvas id="gameCanvas" aria-label="Impulse Run 3D racing viewport"></canvas>
+  <main id="app">
+    <canvas id="gameCanvas" aria-label="Apex Relational Racing three-dimensional flight viewport"></canvas>
     <div class="vignette" aria-hidden="true"></div>
     <div class="scanlines" aria-hidden="true"></div>
 
     <header id="hud" class="hud hidden" aria-live="polite">
-      <div class="hud-cluster brand-cluster">
-        <span class="eyebrow">DREAM UNITY // VECTOR CIRCUIT</span>
-        <strong>IMPULSE RUN</strong>
+      <section class="hud-panel brand-panel">
+        <span class="eyebrow">DREAM UNITY // APEX CIRCUIT</span>
+        <strong>APEX RELATIONAL RACING</strong>
         <span id="modeLabel" class="mode-label">RELATIONAL GRAND PRIX</span>
-      </div>
-      <div class="hud-cluster metrics-cluster">
+      </section>
+
+      <section class="hud-panel race-panel">
         <div class="metric"><span>POS</span><strong id="positionValue">1 / 6</strong></div>
         <div class="metric"><span>TIME</span><strong id="timeValue">00:00.0</strong></div>
-        <div class="metric"><span>SECTOR</span><strong id="sectorValue">1 / 10</strong></div>
-      </div>
-      <div class="hud-cluster score-cluster">
+        <div class="metric"><span>SECTOR</span><strong id="sectorValue">1 / 16</strong></div>
+      </section>
+
+      <section class="hud-panel flight-panel">
+        <div class="metric speed"><span>SPEED</span><strong id="speedValue">0</strong><small>KM/H</small></div>
+        <div class="metric"><span>ALT</span><strong id="altitudeValue">0 m</strong></div>
+        <div class="metric"><span>MACH</span><strong id="machValue">0.00</strong></div>
+        <div class="metric"><span>LOAD</span><strong id="gValue">1.0 g</strong></div>
+      </section>
+
+      <section class="hud-panel cognition-panel">
         <div class="metric relation"><span>RELATION</span><strong id="relationValue">—</strong></div>
         <div class="metric pilot"><span>PILOT</span><strong id="pilotValue">—</strong></div>
-        <div class="metric"><span>SPEED</span><strong id="speedValue">0</strong><small>KM/H</small></div>
-      </div>
-      <div class="resource-stack">
-        <div class="resource-row"><span>BOOST</span><div class="resource-track"><i id="boostFill"></i></div></div>
+        <div class="resource-row"><span>FLOW DRIVE</span><div class="resource-track drive"><i id="driveFill"></i></div></div>
+        <div class="resource-row"><span>AFTERBURNER</span><div class="resource-track"><i id="afterburnerFill"></i></div></div>
         <div class="resource-row"><span>SHIELD</span><div class="resource-track shield"><i id="shieldFill"></i></div></div>
-      </div>
+      </section>
     </header>
 
-    <!-- Retained as an inert compatibility surface for the previous controller. The
-         endogenous runtime keeps it hidden and encodes control-frame relations in
-         visible race-world fields instead. -->
-    <div id="challengeBeacon" class="challenge-beacon hidden" aria-hidden="true">
-      <i></i><span id="challengeFamily">RELATIONAL FLIGHT</span><i></i>
+    <div id="relationSignal" class="relation-signal hidden" aria-hidden="true">
+      <i></i><span id="relationPhase">READ THE RACE</span><i></i>
     </div>
-    <div id="controlRelationSystem" class="control-relation-system hidden" aria-hidden="true">
-      <div id="controlRelationCue" class="control-relation-cue">
-        <div class="cr-frame cr-input-frame"><i class="cr-axis-x"></i><i class="cr-axis-y"></i><b class="cr-probe cr-probe-a"></b><b class="cr-probe cr-probe-b"></b></div>
-        <div class="cr-stream"><i></i><i></i><i></i></div>
-        <div class="cr-frame cr-output-frame"><i class="cr-axis-x"></i><i class="cr-axis-y"></i><b class="cr-probe cr-probe-a"></b><b class="cr-probe cr-probe-b"></b></div>
-        <div id="controlRelationCountdown" class="cr-countdown"></div>
-      </div>
-      <div id="controlRelationMini" class="control-relation-mini hidden">
-        <div class="cr-frame cr-mini-input"><i class="cr-axis-x"></i><i class="cr-axis-y"></i><b class="cr-probe cr-probe-a"></b><b class="cr-probe cr-probe-b"></b></div>
-        <div class="cr-mini-stream"></div>
-        <div class="cr-frame cr-mini-output"><i class="cr-axis-x"></i><i class="cr-axis-y"></i><b class="cr-probe cr-probe-a"></b><b class="cr-probe cr-probe-b"></b></div>
-      </div>
-    </div>
-
     <div id="feedback" class="feedback hidden" role="status"></div>
     <div id="countdown" class="countdown hidden" aria-live="assertive"></div>
 
     <section id="menu" class="overlay menu-overlay">
       <div class="menu-panel glass">
-        <div class="menu-kicker">DREAM UNITY // 03</div>
-        <h1>IMPULSE <span>RUN</span></h1>
-        <p class="menu-subtitle">Read the race → predict the relation → commit a flight line → convert reasoning into speed.</p>
-        <p class="menu-copy">No picture puzzles. Opponents, wakes, rotating structures, formations, reference frames and timing create the relational problem inside the race itself. Correct relational trajectories build thrust and overtaking momentum; wrong models create drag and let the field pull away.</p>
+        <div class="menu-kicker">DREAM UNITY // RELATIONAL FLIGHT SYSTEM 04</div>
+        <h1>APEX <span>RELATIONAL RACING</span></h1>
+        <p class="menu-subtitle">Relational intelligence is the engine.</p>
+        <p class="menu-copy">
+          Fly a true three-dimensional fighter-class aircraft. Read opponents, converging vortices, formation axes,
+          rotating reference frames, energy states and temporal race events. Your trajectory expresses the inference.
+          Enter the causal airflow relation and the aircraft accelerates; misread it and drag lets the field pull away.
+        </p>
 
         <div class="mode-grid" role="group" aria-label="Race mode">
           <button class="mode-card selected" data-mode="grand-prix">
-            <span class="mode-index">01</span>
-            <strong>RELATIONAL GRAND PRIX</strong>
-            <small>Adaptive world-coupled inference, six-racer pressure and compounding speed consequences.</small>
+            <span>01</span><strong>RELATIONAL GRAND PRIX</strong>
+            <small>Nine adaptive relational sectors inside a six-jet competition.</small>
           </button>
           <button class="mode-card" data-mode="training">
-            <span class="mode-index">02</span>
-            <strong>VECTOR TRAINING</strong>
-            <small>Broader spatial margins and progressive exposure to wakes, formations, moving frames and timing.</small>
+            <span>02</span><strong>RELATIONAL FLIGHT SCHOOL</strong>
+            <small>Embodied demonstrations, stronger causal evidence and lower entry speed.</small>
           </button>
           <button class="mode-card" data-mode="assessment">
-            <span class="mode-index">03</span>
-            <strong>ASSESSMENT RUN</strong>
-            <small>Separate trajectory-inference, error-topology, control-frame and piloting measurements.</small>
+            <span>03</span><strong>BLIND ASSESSMENT RUN</strong>
+            <small>Calibrated motor baseline, balanced rules and withheld explicit feedback.</small>
           </button>
           <button class="mode-card" data-mode="transfer">
-            <span class="mode-index">04</span>
-            <strong>TRANSFER TRIAL</strong>
-            <small>Unfamiliar reference frames, role changes and multi-relation composition under maximum race pressure.</small>
+            <span>04</span><strong>HELD-OUT TRANSFER CIRCUIT</strong>
+            <small>Unseen spatial-temporal compositions under maximum competitive pressure.</small>
           </button>
         </div>
 
@@ -95,12 +84,14 @@
           <button id="soundButton" class="icon-button" aria-label="Toggle sound" title="Toggle sound">♪</button>
           <button id="motionButton" class="icon-button" aria-label="Toggle reduced motion" title="Toggle reduced motion">≈</button>
         </div>
-        <div class="control-strip">
-          <span><b>DESKTOP</b> WASD / arrows steer · Shift boost · Space brake · mouse-drag supported</span>
-          <span><b>MOBILE</b> left flight stick · boost and brake remain stable</span>
-          <span><b>RELATIONAL FLIGHT</b> control remapping occurs only inside visible moving-frame fields; the race environment specifies the transformed control-to-motion relation</span>
+
+        <div class="control-grid">
+          <div><b>FLIGHT</b><span>A / D roll · S pulls up · W pitches down · Q / E yaw</span></div>
+          <div><b>ENERGY</b><span>R / F throttle · Shift afterburner · Space airbrake</span></div>
+          <div><b>CAMERA</b><span>Mouse drag flies · C changes chase camera · P / Esc pauses</span></div>
+          <div><b>TOUCH</b><span>Left stick pitch/roll · right stick yaw/throttle · hold burner or brake</span></div>
         </div>
-        <p class="disclaimer">Relational trajectory choice, environmental control-frame adaptation and physical flight execution are recorded as separate channels. Performance telemetry is experimental and is not a clinical IQ measure.</p>
+        <p class="disclaimer">Experimental cognitive-training telemetry is stored locally unless explicitly exported. It is not a clinical IQ measure.</p>
       </div>
     </section>
 
@@ -109,66 +100,58 @@
         <div class="menu-kicker">FLIGHT SUSPENDED</div>
         <h2>PAUSED</h2>
         <button id="resumeButton" class="primary-button">RESUME</button>
-        <button id="restartButton" class="secondary-button">RESTART RUN</button>
-        <button id="menuButton" class="secondary-button">RETURN TO MODE SELECT</button>
+        <button id="restartButton" class="secondary-button">RESTART RACE</button>
+        <button id="menuButton" class="secondary-button">MODE SELECT</button>
       </div>
     </section>
 
     <section id="resultsOverlay" class="overlay hidden">
       <div class="results-panel glass">
         <div class="menu-kicker">SESSION COMPLETE</div>
-        <h2 id="resultTitle">VECTOR RUN COMPLETE</h2>
+        <h2 id="resultTitle">RACE COMPLETE</h2>
         <div class="result-summary">
-          <div class="result-ring relation-ring"><strong id="resultRelation">0%</strong><span>RELATIONAL</span></div>
-          <div class="result-ring pilot-ring"><strong id="resultPilot">0%</strong><span>PILOTING</span></div>
-          <div class="result-ring control-ring"><strong id="resultControlRelation">—</strong><span>CONTROL FRAME</span></div>
+          <div class="result-ring relation-ring"><strong id="resultRelation">0%</strong><span>RELATIONAL MODEL</span></div>
+          <div class="result-ring pilot-ring"><strong id="resultPilot">0%</strong><span>EXECUTION</span></div>
+          <div class="result-ring transfer-ring"><strong id="resultTransfer">0%</strong><span>TRANSFER</span></div>
           <div class="result-ring"><strong id="resultPosition">1 / 6</strong><span>FINISH</span></div>
         </div>
         <div class="result-grid">
           <div><span>Median inference</span><strong id="resultLatency">0.00 s</strong></div>
-          <div><span>Novel relation rate</span><strong id="resultNovelty">100%</strong></div>
-          <div><span>Trajectory precision</span><strong id="resultPrecision">0%</strong></div>
-          <div><span>Collisions</span><strong id="resultCollisions">0</strong></div>
-          <div><span>Top diagnostic</span><strong id="resultDiagnostic">—</strong></div>
+          <div><span>Model confidence</span><strong id="resultConfidence">0%</strong></div>
+          <div><span>Final flow drive</span><strong id="resultDrive">0</strong></div>
+          <div><span>Motor calibration</span><strong id="resultMotorBaseline">σ 0.0 m</strong></div>
+          <div><span>Dominant diagnostic</span><strong id="resultErrors">—</strong></div>
           <div><span>Race time</span><strong id="resultTime">00:00.0</strong></div>
         </div>
         <div id="familyBreakdown" class="family-breakdown"></div>
-
-        <section id="controlRelationResults" class="control-relation-results hidden">
-          <div class="control-result-heading"><span>Environmental control-frame relation</span><strong id="controlFrameScore">—</strong></div>
-          <div class="result-grid control-result-grid">
-            <div><span>Frame fields</span><strong id="controlSwitches">0</strong></div>
-            <div><span>First-action accuracy</span><strong id="controlFirstAction">—</strong></div>
-            <div><span>Mean inference</span><strong id="controlInferenceLatency">—</strong></div>
-            <div><span>Mean recovery</span><strong id="controlRecovery">—</strong></div>
-            <div><span>Switch context</span><strong id="controlSwitchCost">—</strong></div>
-            <div><span>World novelty</span><strong id="controlTransitionNovelty">—</strong></div>
-            <div><span>Adaptation source</span><strong id="controlAdaptation">—</strong></div>
-          </div>
-          <div id="controlErrorTopology" class="family-breakdown control-error-topology"></div>
-        </section>
-
         <div class="result-actions">
-          <button id="runAgainButton" class="primary-button">RUN AGAIN</button>
+          <button id="runAgainButton" class="primary-button">RACE AGAIN</button>
           <button id="exportButton" class="secondary-button">EXPORT TELEMETRY</button>
           <button id="resultsMenuButton" class="secondary-button">MODE SELECT</button>
         </div>
-        <p class="disclaimer">Scores describe performance inside this game; they do not by themselves establish general-intelligence gains or clinical assessment validity.</p>
+        <p class="disclaimer">Reasoning classification is fitted to pre-feedback trajectories; execution is scored against the selected model after motor calibration.</p>
       </div>
     </section>
 
     <button id="pauseButton" class="pause-button hidden" aria-label="Pause">Ⅱ</button>
-    <div id="touchControls" class="touch-controls hidden" aria-label="Touch flight controls">
-      <div id="joystick" class="joystick"><div id="stick" class="stick"></div></div>
+
+    <div id="touchControls" class="touch-controls hidden" aria-label="Touch fighter controls">
+      <div class="stick-cluster left-stick-cluster">
+        <div id="flightStick" class="virtual-stick"><div id="flightKnob" class="stick-knob"></div></div>
+        <span>PITCH / ROLL</span>
+      </div>
       <div class="touch-actions">
-        <button id="boostButton" class="touch-button boost-button"><span>BOOST</span></button>
-        <button id="brakeButton" class="touch-button brake-button"><span>BRAKE</span></button>
+        <button id="afterburnerButton" class="touch-button burner"><span>AFTERBURNER</span></button>
+        <button id="airbrakeButton" class="touch-button brake"><span>AIRBRAKE</span></button>
+      </div>
+      <div class="stick-cluster right-stick-cluster">
+        <div id="systemsStick" class="virtual-stick"><div id="systemsKnob" class="stick-knob"></div></div>
+        <span>YAW / THROTTLE</span>
       </div>
     </div>
 
     <div id="fatalError" class="fatal-error hidden" role="alert"></div>
-  </div>
-  <script type="module" src="./src/main.js"></script>
-  <script type="module" src="./src/world-racing.js"></script>
+  </main>
+  <script type="module" src="./src/fighter-game.js"></script>
 </body>
 </html>
