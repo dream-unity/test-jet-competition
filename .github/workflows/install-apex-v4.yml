@@ -4,7 +4,6 @@ on:
   push:
     branches: [apex-relational-racing-v4]
     paths:
-      - 'bootstrap-v4/**'
       - '.github/workflows/install-apex-v4.yml'
   workflow_dispatch:
 
@@ -17,6 +16,7 @@ concurrency:
 
 jobs:
   reconstruct-test-commit:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout exact v4 source branch
@@ -25,10 +25,13 @@ jobs:
           ref: apex-relational-racing-v4
           fetch-depth: 0
 
-      - name: Reconstruct and safely extract complete source archive
+      - name: Reconstruct, verify and safely extract complete source archive
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p /tmp/current-workflows
+          cp -a .github/workflows/. /tmp/current-workflows/
+
           python3 - <<'PY'
           from pathlib import Path, PurePosixPath
           import base64
@@ -36,6 +39,7 @@ jobs:
           import shutil
           import tarfile
 
+          expected_sha = 'b4166ceb2314608c9a0bd7d7df9ff7603f81adca14560deb93663184cf10334e'
           parts = sorted(Path('bootstrap-v4').glob('part-[0-9][0-9].b64'))
           expected_names = [f'part-{index:02d}.b64' for index in range(10)]
           names = [path.name for path in parts]
@@ -43,7 +47,12 @@ jobs:
               raise SystemExit(f'Unexpected payload set: {names}')
 
           encoded = ''.join(''.join(path.read_text(encoding='ascii').split()) for path in parts)
+          if len(encoded) != 83480 or len(encoded) % 4:
+              raise SystemExit(f'Unexpected combined base64 length: {len(encoded)}')
           archive = base64.b64decode(encoded.encode('ascii'), validate=True)
+          digest = hashlib.sha256(archive).hexdigest()
+          if digest != expected_sha:
+              raise SystemExit(f'Archive SHA-256 mismatch: expected {expected_sha}, got {digest}')
           if not archive.startswith(b'\x1f\x8b\x08'):
               raise SystemExit('Reconstructed payload is not a gzip archive')
 
@@ -64,23 +73,28 @@ jobs:
               bundle.extractall(destination, filter='data')
 
           required = [
-              'index.html', 'fighter-v4.css', 'package.json',
+              'index.html', 'fighter-v4.css', 'package.json', 'DESIGN_CONTRACT.md',
               'src/fighter-game.js', 'src/fighter-flight.js',
               'src/relational-racing.js', 'src/fighter-visuals.js',
               'tests/relational-validity.test.mjs',
-              '.github/workflows/pages.yml',
           ]
           missing = [name for name in required if not (destination / name).is_file()]
           if missing:
               raise SystemExit(f'Archive omitted required files: {missing}')
 
           print('archive bytes:', len(archive))
-          print('archive sha256:', hashlib.sha256(archive).hexdigest())
+          print('archive sha256:', digest)
           print('safe members:', len(members))
           PY
 
           rsync -a --delete --exclude='.git/' /tmp/apex-relational-racing-v4/ ./
-          rm -rf bootstrap-v4 .github/workflows/install-apex-v4.yml
+
+          # The workflow token has contents permission but not workflow-edit permission.
+          # Preserve the branch's exact workflow tree; connector writes install final v4 workflows later.
+          rm -rf .github/workflows
+          mkdir -p .github/workflows
+          cp -a /tmp/current-workflows/. .github/workflows/
+          rm -rf bootstrap-v4
           touch .nojekyll
 
       - name: Validate fighter flight, causal reasoning, assessment and deployment
