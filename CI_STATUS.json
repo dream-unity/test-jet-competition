@@ -1,7 +1,7 @@
 {
   "game": "Apex Relational Racing",
   "architecture": "causal-relational-fighter-racing-v4",
-  "source_sha": "cada61a89c555fcdc97160a38445688ef0ebfd63",
+  "source_sha": "01bbf14a3d125fca03f0eb01e11bdf92cf1dfe4c",
   "tests": "passed",
   "validated_components": [
     "quaternion fighter flight",
@@ -28,5 +28,5 @@
     "pending_domain_unverified_at": null,
     "https_enforced": true
   },
-  "recorded_at": "2026-08-25T00:38:16.717299+00:00"
+  "recorded_at": "2026-08-25T00:39:38.117834+00:00"
 }
