@@ -4,9 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <meta name="theme-color" content="#040812">
-  <meta name="description" content="Apex Relational Racing — a full 3D fighter-jet competition where causal relational reasoning becomes thrust, drag and race position.">
+  <meta name="description" content="Apex Relational Racing — one continuous ten-level 3D fighter-jet race where causal relational reasoning becomes speed, drag and position.">
   <title>Apex Relational Racing — Dream Unity</title>
   <link rel="stylesheet" href="./fighter-v4.css">
+  <link rel="stylesheet" href="./single-race-v5.css">
 </head>
 <body>
   <main id="app">
@@ -18,13 +19,13 @@
       <section class="hud-panel brand-panel">
         <span class="eyebrow">DREAM UNITY // APEX CIRCUIT</span>
         <strong>APEX RELATIONAL RACING</strong>
-        <span id="modeLabel" class="mode-label">RELATIONAL GRAND PRIX</span>
+        <span id="modeLabel" class="mode-label">ONE RACE // LEVEL 1</span>
       </section>
 
       <section class="hud-panel race-panel">
         <div class="metric"><span>POS</span><strong id="positionValue">1 / 6</strong></div>
         <div class="metric"><span>TIME</span><strong id="timeValue">00:00.0</strong></div>
-        <div class="metric"><span>SECTOR</span><strong id="sectorValue">1 / 16</strong></div>
+        <div class="metric"><span>LEVEL</span><strong id="sectorValue">1 / 10</strong></div>
       </section>
 
       <section class="hud-panel flight-panel">
@@ -36,7 +37,7 @@
 
       <section class="hud-panel cognition-panel">
         <div class="metric relation"><span>RELATION</span><strong id="relationValue">—</strong></div>
-        <div class="metric pilot"><span>PILOT</span><strong id="pilotValue">—</strong></div>
+        <div class="metric pilot"><span>FLIGHT</span><strong id="pilotValue">—</strong></div>
         <div class="resource-row"><span>FLOW DRIVE</span><div class="resource-track drive"><i id="driveFill"></i></div></div>
         <div class="resource-row"><span>AFTERBURNER</span><div class="resource-track"><i id="afterburnerFill"></i></div></div>
         <div class="resource-row"><span>SHIELD</span><div class="resource-track shield"><i id="shieldFill"></i></div></div>
@@ -44,52 +45,57 @@
     </header>
 
     <div id="relationSignal" class="relation-signal hidden" aria-hidden="true">
-      <i></i><span id="relationPhase">READ THE RACE</span><i></i>
+      <i></i><span id="relationPhase">LEVEL 1 / 10 // READ THE RACE</span><i></i>
     </div>
     <div id="feedback" class="feedback hidden" role="status"></div>
     <div id="countdown" class="countdown hidden" aria-live="assertive"></div>
 
     <section id="menu" class="overlay menu-overlay">
-      <div class="menu-panel glass">
-        <div class="menu-kicker">DREAM UNITY // RELATIONAL FLIGHT SYSTEM 04</div>
+      <div class="menu-panel glass single-race-menu">
+        <div class="menu-kicker">DREAM UNITY // RELATIONAL FLIGHT SYSTEM 05</div>
         <h1>APEX <span>RELATIONAL RACING</span></h1>
-        <p class="menu-subtitle">Relational intelligence is the engine.</p>
+        <p class="menu-subtitle">One race. Ten escalating relational levels. Relational intelligence is the engine.</p>
         <p class="menu-copy">
-          Fly a true three-dimensional fighter-class aircraft. Read opponents, converging vortices, formation axes,
-          rotating reference frames, energy states and temporal race events. Your trajectory expresses the inference.
-          Enter the causal airflow relation and the aircraft accelerates; misread it and drag lets the field pull away.
+          Fly a true three-dimensional fighter-class aircraft at sustained Mach-class speed. Read competitors,
+          vortices, formation axes, moving reference frames, energy differences and temporal race events.
+          Your trajectory expresses the inference: enter the causal airflow and accelerate; misread it and drag
+          lets the other jets pull away.
         </p>
 
-        <div class="mode-grid" role="group" aria-label="Race mode">
-          <button class="mode-card selected" data-mode="grand-prix">
-            <span>01</span><strong>RELATIONAL GRAND PRIX</strong>
-            <small>Nine adaptive relational sectors inside a six-jet competition.</small>
-          </button>
-          <button class="mode-card" data-mode="training">
-            <span>02</span><strong>RELATIONAL FLIGHT SCHOOL</strong>
-            <small>Embodied demonstrations, stronger causal evidence and lower entry speed.</small>
-          </button>
-          <button class="mode-card" data-mode="assessment">
-            <span>03</span><strong>BLIND ASSESSMENT RUN</strong>
-            <small>Calibrated motor baseline, balanced rules and withheld explicit feedback.</small>
-          </button>
-          <button class="mode-card" data-mode="transfer">
-            <span>04</span><strong>HELD-OUT TRANSFER CIRCUIT</strong>
-            <small>Unseen spatial-temporal compositions under maximum competitive pressure.</small>
-          </button>
-        </div>
+        <section class="single-race-brief" aria-label="Ten-level race progression">
+          <div class="race-brief-copy">
+            <span>ONE CONTINUOUS COMPETITION</span>
+            <strong>6 JETS · 10 LEVELS · 1 FINISH</strong>
+            <p>Assistance is strongest at the beginning, then progressively withdrawn. Levels 9–10 compose previously learned relations under full race pressure.</p>
+          </div>
+          <div class="level-track" aria-hidden="true">
+            <span class="level-node assisted"><b>1</b><i>VORTEX</i></span>
+            <span class="level-node assisted"><b>2</b><i>FORMATION</i></span>
+            <span class="level-node"><b>3</b><i>FRAME</i></span>
+            <span class="level-node"><b>4</b><i>TIME</i></span>
+            <span class="level-node"><b>5</b><i>ENERGY</i></span>
+            <span class="level-node"><b>6</b><i>ROLE</i></span>
+            <span class="level-node"><b>7</b><i>PREDICT</i></span>
+            <span class="level-node"><b>8</b><i>TRANSFER</i></span>
+            <span class="level-node composed"><b>9</b><i>COMPOSE</i></span>
+            <span class="level-node composed"><b>10</b><i>MASTER</i></span>
+          </div>
+        </section>
 
-        <div class="menu-actions">
-          <button id="launchButton" class="primary-button">LAUNCH GRAND PRIX</button>
+        <div class="menu-actions single-actions">
+          <button id="launchButton" class="primary-button">LAUNCH THE RACE</button>
+          <button id="pitchButton" class="icon-button pitch-button" aria-label="Toggle direct or inverted pitch" aria-pressed="false">PITCH: DIRECT</button>
           <button id="soundButton" class="icon-button" aria-label="Toggle sound" title="Toggle sound">♪</button>
           <button id="motionButton" class="icon-button" aria-label="Toggle reduced motion" title="Toggle reduced motion">≈</button>
         </div>
 
-        <div class="control-grid">
-          <div><b>FLIGHT</b><span>A / D roll · S pulls up · W pitches down · Q / E yaw</span></div>
+        <div class="control-grid direct-controls">
+          <div><b>TURN</b><span>A / D or ← / → coordinate bank and turn</span></div>
+          <div><b>PITCH</b><span>W / ↑ climbs · S / ↓ dives · direct by default</span></div>
+          <div><b>MANOEUVRE</b><span>Q / E manual roll · Z / X rudder yaw</span></div>
           <div><b>ENERGY</b><span>R / F throttle · Shift afterburner · Space airbrake</span></div>
-          <div><b>CAMERA</b><span>Mouse drag flies · C changes chase camera · P / Esc pauses</span></div>
-          <div><b>TOUCH</b><span>Left stick pitch/roll · right stick yaw/throttle · hold burner or brake</span></div>
+          <div><b>MOUSE</b><span>Hold and drag from your click point to fly smoothly</span></div>
+          <div><b>TOUCH</b><span>Left stick climb/turn · right stick yaw/throttle</span></div>
         </div>
         <p class="disclaimer">Experimental cognitive-training telemetry is stored locally unless explicitly exported. It is not a clinical IQ measure.</p>
       </div>
@@ -101,18 +107,18 @@
         <h2>PAUSED</h2>
         <button id="resumeButton" class="primary-button">RESUME</button>
         <button id="restartButton" class="secondary-button">RESTART RACE</button>
-        <button id="menuButton" class="secondary-button">MODE SELECT</button>
+        <button id="menuButton" class="secondary-button">RETURN TO RACE MENU</button>
       </div>
     </section>
 
     <section id="resultsOverlay" class="overlay hidden">
       <div class="results-panel glass">
-        <div class="menu-kicker">SESSION COMPLETE</div>
-        <h2 id="resultTitle">RACE COMPLETE</h2>
+        <div class="menu-kicker">TEN-LEVEL COMPETITION COMPLETE</div>
+        <h2 id="resultTitle">TEN-LEVEL RACE COMPLETE</h2>
         <div class="result-summary">
           <div class="result-ring relation-ring"><strong id="resultRelation">0%</strong><span>RELATIONAL MODEL</span></div>
           <div class="result-ring pilot-ring"><strong id="resultPilot">0%</strong><span>EXECUTION</span></div>
-          <div class="result-ring transfer-ring"><strong id="resultTransfer">0%</strong><span>TRANSFER</span></div>
+          <div class="result-ring transfer-ring"><strong id="resultTransfer">0%</strong><span>LEVEL 9–10 TRANSFER</span></div>
           <div class="result-ring"><strong id="resultPosition">1 / 6</strong><span>FINISH</span></div>
         </div>
         <div class="result-grid">
@@ -127,7 +133,7 @@
         <div class="result-actions">
           <button id="runAgainButton" class="primary-button">RACE AGAIN</button>
           <button id="exportButton" class="secondary-button">EXPORT TELEMETRY</button>
-          <button id="resultsMenuButton" class="secondary-button">MODE SELECT</button>
+          <button id="resultsMenuButton" class="secondary-button">RACE MENU</button>
         </div>
         <p class="disclaimer">Reasoning classification is fitted to pre-feedback trajectories; execution is scored against the selected model after motor calibration.</p>
       </div>
@@ -138,7 +144,7 @@
     <div id="touchControls" class="touch-controls hidden" aria-label="Touch fighter controls">
       <div class="stick-cluster left-stick-cluster">
         <div id="flightStick" class="virtual-stick"><div id="flightKnob" class="stick-knob"></div></div>
-        <span>PITCH / ROLL</span>
+        <span>CLIMB / TURN</span>
       </div>
       <div class="touch-actions">
         <button id="afterburnerButton" class="touch-button burner"><span>AFTERBURNER</span></button>
@@ -152,6 +158,6 @@
 
     <div id="fatalError" class="fatal-error hidden" role="alert"></div>
   </main>
-  <script type="module" src="./src/fighter-game.js"></script>
+  <script type="module" src="./src/single-race-v5.js"></script>
 </body>
 </html>

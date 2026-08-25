@@ -1,4 +1,4 @@
-name: Verify live Apex Relational Racing deployment
+name: Verify live Apex One-Race v5 deployment
 
 on:
   push:
@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: apex-v4-live-deployment-verification
+  group: apex-v5-live-deployment-verification
   cancel-in-progress: true
 
 jobs:
@@ -25,7 +25,7 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Wait for the live fighter runtime to exactly match tested source
+      - name: Wait for the live one-race fighter runtime to exactly match tested source
         shell: bash
         env:
           PAGE_URL: https://dream-unity.github.io/test-jet-competition
@@ -34,6 +34,7 @@ jobs:
           files=(
             index.html
             fighter-v4.css
+            single-race-v5.css
             src/math3d.js
             src/renderer-v4.js
             src/fighter-audio.js
@@ -42,11 +43,13 @@ jobs:
             src/course3d.js
             src/fighter-visuals.js
             src/relational-racing.js
+            src/race-progression.js
             src/fighter-game.js
+            src/single-race-v5.js
           )
           mkdir -p /tmp/apex-live/src
           matched='false'
-          for attempt in $(seq 1 36); do
+          for attempt in $(seq 1 40); do
             matched='true'
             for path in "${files[@]}"; do
               if ! curl --fail --location --silent --show-error \
@@ -61,23 +64,26 @@ jobs:
               fi
             done
             if [ "$matched" = 'true' ]; then break; fi
-            echo "Deployment has not propagated yet (attempt $attempt/36)."
+            echo "Deployment has not propagated yet (attempt $attempt/40)."
             sleep 5
           done
           test "$matched" = 'true'
           grep -q '<title>Apex Relational Racing' /tmp/apex-live/index.html
-          grep -q 'src/fighter-game.js' /tmp/apex-live/index.html
-          grep -q 'new FighterFlightModel' /tmp/apex-live/src/fighter-game.js
-          grep -q 'scoreTrajectoryHypotheses' /tmp/apex-live/src/fighter-game.js
+          grep -q 'src/single-race-v5.js' /tmp/apex-live/index.html
+          grep -q 'ONE CONTINUOUS COMPETITION' /tmp/apex-live/index.html
+          grep -q 'SINGLE_RACE_CONFIG' /tmp/apex-live/src/single-race-v5.js
+          grep -q 'updateForgivingProgress' /tmp/apex-live/src/single-race-v5.js
+          grep -q 'composeFlightAxes' /tmp/apex-live/src/fighter-input.js
+          grep -q 'maximumSpeed' /tmp/apex-live/src/fighter-flight.js
+          grep -q 'level: 10' /tmp/apex-live/src/race-progression.js
           grep -q 'vortex-convergence' /tmp/apex-live/src/relational-racing.js
-          grep -q 'orientation' /tmp/apex-live/src/fighter-flight.js
-          if grep -Eq 'correctIndex|candidate\.pattern|renderPattern\(|src/main\.js|world-racing\.js' \
-             /tmp/apex-live/index.html /tmp/apex-live/src/fighter-game.js; then
-            echo 'Live surface unexpectedly contains rejected legacy puzzle runtime.' >&2
+          if grep -Eqi 'class="mode-card|data-mode=|MODE SELECT|src/main\.js|world-racing\.js|correctIndex|candidate\.pattern|renderPattern\(' \
+             /tmp/apex-live/index.html /tmp/apex-live/src/single-race-v5.js; then
+            echo 'Live surface unexpectedly contains rejected multi-mode or legacy puzzle architecture.' >&2
             exit 1
           fi
-          sha256sum /tmp/apex-live/index.html /tmp/apex-live/fighter-v4.css /tmp/apex-live/src/*.js \
-            > /tmp/apex-live-checksums.txt
+          sha256sum /tmp/apex-live/index.html /tmp/apex-live/fighter-v4.css \
+            /tmp/apex-live/single-race-v5.css /tmp/apex-live/src/*.js > /tmp/apex-live-checksums.txt
 
       - name: Commit verified deployment receipt
         shell: bash
@@ -95,14 +101,23 @@ jobs:
           receipt = {
               'game': 'Apex Relational Racing',
               'deployment': 'verified-live',
-              'architecture': 'causal-relational-fighter-racing-v4',
+              'architecture': 'one-race-fluid-fighter-v5',
               'page_url': os.environ['PAGE_URL'],
               'source_sha': os.environ['SOURCE_SHA'],
               'files_compared': [
-                  'index.html', 'fighter-v4.css',
+                  'index.html', 'fighter-v4.css', 'single-race-v5.css',
                   'src/math3d.js', 'src/renderer-v4.js', 'src/fighter-audio.js',
                   'src/fighter-input.js', 'src/fighter-flight.js', 'src/course3d.js',
-                  'src/fighter-visuals.js', 'src/relational-racing.js', 'src/fighter-game.js',
+                  'src/fighter-visuals.js', 'src/relational-racing.js',
+                  'src/race-progression.js', 'src/fighter-game.js', 'src/single-race-v5.js',
+              ],
+              'verified_properties': [
+                  'one continuous race',
+                  'ten progressive relational levels',
+                  'direct cross-device controls',
+                  'non-blocking checkpoints',
+                  'Mach-class fighter-flight runtime',
+                  'byte-for-byte live source identity',
               ],
               'sha256': Path('/tmp/apex-live-checksums.txt').read_text(encoding='utf-8').splitlines(),
               'verified_at': datetime.now(timezone.utc).isoformat(),
@@ -113,6 +128,6 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add DEPLOYMENT_STATUS.json
           git diff --cached --quiet && exit 0
-          git commit -m 'Record verified live Apex v4 deployment [skip ci]'
+          git commit -m 'Record verified live Apex One-Race v5 deployment [skip ci]'
           git pull --rebase origin main
           git push origin HEAD:main
