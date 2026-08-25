@@ -1,4 +1,4 @@
-name: Validate Impulse Run pull requests
+name: Validate Apex Relational Racing pull requests
 
 on:
   pull_request:
@@ -9,14 +9,14 @@ permissions:
   contents: read
 
 concurrency:
-  group: impulse-run-pr-${{ github.event.pull_request.number || github.ref }}
+  group: apex-v4-pr-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  test:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout proposed source
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - name: Run complete deterministic game validation
+      - name: Run complete fighter, relational-validity and static validation
         run: npm test

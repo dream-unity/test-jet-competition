@@ -1,4 +1,4 @@
-name: Verify live Impulse Run deployment
+name: Verify live Apex Relational Racing deployment
 
 on:
   push:
@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: live-deployment-verification
+  group: apex-v4-live-deployment-verification
   cancel-in-progress: true
 
 jobs:
@@ -25,7 +25,7 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Wait for live endogenous racing files to exactly match tested source
+      - name: Wait for the live fighter runtime to exactly match tested source
         shell: bash
         env:
           PAGE_URL: https://dream-unity.github.io/test-jet-competition
@@ -33,53 +33,51 @@ jobs:
           set -euo pipefail
           files=(
             index.html
-            styles.css
-            control-relations.css
-            src/main.js
-            src/renderer.js
-            src/relational.js
-            src/control-relations.js
-            src/systems.js
-            src/world-relations.js
-            src/world-racing.js
+            fighter-v4.css
+            src/math3d.js
+            src/renderer-v4.js
+            src/fighter-audio.js
+            src/fighter-input.js
+            src/fighter-flight.js
+            src/course3d.js
+            src/fighter-visuals.js
+            src/relational-racing.js
+            src/fighter-game.js
           )
-          mkdir -p /tmp/live/src
+          mkdir -p /tmp/apex-live/src
           matched='false'
-          for attempt in $(seq 1 30); do
+          for attempt in $(seq 1 36); do
             matched='true'
             for path in "${files[@]}"; do
               if ! curl --fail --location --silent --show-error \
                 --retry 3 --retry-all-errors --retry-delay 2 \
-                "$PAGE_URL/$path?source=${GITHUB_SHA}" --output "/tmp/live/$path"; then
+                "$PAGE_URL/$path?source=${GITHUB_SHA}" --output "/tmp/apex-live/$path"; then
                 matched='false'
                 break
               fi
-              if ! cmp --silent "$path" "/tmp/live/$path"; then
+              if ! cmp --silent "$path" "/tmp/apex-live/$path"; then
                 matched='false'
                 break
               fi
             done
-            if [ "$matched" = 'true' ]; then
-              break
-            fi
-            echo "Deployment has not propagated yet (attempt $attempt/30)."
+            if [ "$matched" = 'true' ]; then break; fi
+            echo "Deployment has not propagated yet (attempt $attempt/36)."
             sleep 5
           done
           test "$matched" = 'true'
-          grep -q '<title>Impulse Run' /tmp/live/index.html
-          grep -q 'src/world-racing.js' /tmp/live/index.html
-          grep -q 'generateWorldSchedule' /tmp/live/src/world-relations.js
-          grep -q 'reasoningDrive' /tmp/live/src/world-racing.js
-          grep -q 'moving-frame-field' /tmp/live/src/world-racing.js
-          if grep -q 'correctIndex\|candidate\.pattern\|renderPattern(' /tmp/live/src/world-racing.js; then
-            echo 'Active endogenous runtime unexpectedly contains picture-answer logic.' >&2
+          grep -q '<title>Apex Relational Racing' /tmp/apex-live/index.html
+          grep -q 'src/fighter-game.js' /tmp/apex-live/index.html
+          grep -q 'new FighterFlightModel' /tmp/apex-live/src/fighter-game.js
+          grep -q 'scoreTrajectoryHypotheses' /tmp/apex-live/src/fighter-game.js
+          grep -q 'vortex-convergence' /tmp/apex-live/src/relational-racing.js
+          grep -q 'orientation' /tmp/apex-live/src/fighter-flight.js
+          if grep -Eq 'correctIndex|candidate\.pattern|renderPattern\(|src/main\.js|world-racing\.js' \
+             /tmp/apex-live/index.html /tmp/apex-live/src/fighter-game.js; then
+            echo 'Live surface unexpectedly contains rejected legacy puzzle runtime.' >&2
             exit 1
           fi
-          sha256sum \
-            /tmp/live/index.html \
-            /tmp/live/styles.css \
-            /tmp/live/control-relations.css \
-            /tmp/live/src/*.js > /tmp/live-checksums.txt
+          sha256sum /tmp/apex-live/index.html /tmp/apex-live/fighter-v4.css /tmp/apex-live/src/*.js \
+            > /tmp/apex-live-checksums.txt
 
       - name: Commit verified deployment receipt
         shell: bash
@@ -95,28 +93,26 @@ jobs:
           import os
 
           receipt = {
-              'game': 'Impulse Run',
+              'game': 'Apex Relational Racing',
               'deployment': 'verified-live',
-              'architecture': 'endogenous-relational-racing-v2',
+              'architecture': 'causal-relational-fighter-racing-v4',
               'page_url': os.environ['PAGE_URL'],
               'source_sha': os.environ['SOURCE_SHA'],
               'files_compared': [
-                  'index.html', 'styles.css', 'control-relations.css',
-                  'src/main.js', 'src/renderer.js', 'src/relational.js',
-                  'src/control-relations.js', 'src/systems.js',
-                  'src/world-relations.js', 'src/world-racing.js'
+                  'index.html', 'fighter-v4.css',
+                  'src/math3d.js', 'src/renderer-v4.js', 'src/fighter-audio.js',
+                  'src/fighter-input.js', 'src/fighter-flight.js', 'src/course3d.js',
+                  'src/fighter-visuals.js', 'src/relational-racing.js', 'src/fighter-game.js',
               ],
-              'sha256': Path('/tmp/live-checksums.txt').read_text(encoding='utf-8').splitlines(),
+              'sha256': Path('/tmp/apex-live-checksums.txt').read_text(encoding='utf-8').splitlines(),
               'verified_at': datetime.now(timezone.utc).isoformat(),
           }
-          Path('DEPLOYMENT_STATUS.json').write_text(
-              json.dumps(receipt, indent=2) + '\n', encoding='utf-8'
-          )
+          Path('DEPLOYMENT_STATUS.json').write_text(json.dumps(receipt, indent=2) + '\n', encoding='utf-8')
           PY
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add DEPLOYMENT_STATUS.json
           git diff --cached --quiet && exit 0
-          git commit -m 'Record verified live Impulse Run deployment [skip ci]'
+          git commit -m 'Record verified live Apex v4 deployment [skip ci]'
           git pull --rebase origin main
           git push origin HEAD:main

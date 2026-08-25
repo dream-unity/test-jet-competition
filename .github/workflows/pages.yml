@@ -1,4 +1,4 @@
-name: Validate and publish Impulse Run
+name: Validate and publish Apex Relational Racing
 
 on:
   push:
@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: gh-pages-publishing
+  group: apex-v4-gh-pages-publishing
   cancel-in-progress: false
 
 jobs:
@@ -25,30 +25,28 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Validate relational engine, control-frame engine, renderer and static build
+      - name: Validate flight, cognition, visuals and static deployment
         run: npm test
 
-      - name: Publish immutable static surface to gh-pages
+      - name: Publish immutable validated surface to gh-pages
         shell: bash
         run: |
           set -euo pipefail
           git fetch origin gh-pages
-          rm -rf /tmp/impulse-run-pages
-          git worktree add --force /tmp/impulse-run-pages -B gh-pages origin/gh-pages
-
-          find /tmp/impulse-run-pages -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
-          cp index.html styles.css control-relations.css package.json README.md LICENSE \
-             ASSET_MANIFEST.json THIRD_PARTY_NOTICES.md /tmp/impulse-run-pages/
-          cp -R src /tmp/impulse-run-pages/src
-          touch /tmp/impulse-run-pages/.nojekyll
-
-          cd /tmp/impulse-run-pages
+          rm -rf /tmp/apex-relational-pages
+          git worktree add --force /tmp/apex-relational-pages -B gh-pages origin/gh-pages
+          find /tmp/apex-relational-pages -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+          cp index.html fighter-v4.css package.json README.md DESIGN_CONTRACT.md LICENSE \
+             ASSET_MANIFEST.json THIRD_PARTY_NOTICES.md /tmp/apex-relational-pages/
+          cp -R src /tmp/apex-relational-pages/src
+          touch /tmp/apex-relational-pages/.nojekyll
+          cd /tmp/apex-relational-pages
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
           if git diff --cached --quiet; then
-            echo 'Published assets already match the validated source.'
+            echo 'Published assets already match validated source.'
             exit 0
           fi
-          git commit -m "Publish validated Impulse Run from ${GITHUB_SHA}"
+          git commit -m "Publish validated Apex Relational Racing from ${GITHUB_SHA}"
           git push origin HEAD:gh-pages
