@@ -30,7 +30,7 @@ const BASE_CONTROL_POINTS = Object.freeze([
   [0, 155, 10450],
 ]);
 
-function rawSplineSamples(controlPoints, subdivisions = 36) {
+function rawSplineSamples(controlPoints, subdivisions = 42) {
   const padded = [controlPoints[0], ...controlPoints, controlPoints.at(-1)];
   const samples = [];
   for (let segment = 0; segment < controlPoints.length - 1; segment += 1) {
@@ -54,7 +54,7 @@ function cumulativeDistances(points) {
   return cumulative;
 }
 
-function resampleByDistance(points, spacing = 14) {
+function resampleByDistance(points, spacing = 22) {
   const cumulative = cumulativeDistances(points);
   const total = cumulative.at(-1);
   const output = [];
@@ -96,7 +96,7 @@ function buildFrames(samples) {
     const turn = V3.cross(previousTangent, forward);
     const signedCurvature = V3.dot(turn, up);
     const edgeFade = Math.min(1, index / 12, (samples.length - 1 - index) / 12);
-    const bank = clamp(-signedCurvature * 7.5, -0.82, 0.82) * clamp(edgeFade, 0, 1);
+    const bank = clamp(-signedCurvature * 72, -0.92, 0.92) * clamp(edgeFade, 0, 1);
     ({ right, up } = rotateFrameAroundForward(right, up, bank));
 
     samples[index] = {
@@ -114,21 +114,39 @@ function buildFrames(samples) {
 }
 
 export class Course3D {
-  constructor(seed = 'fighter-course', { spacing = 14, width = 115, height = 82 } = {}) {
+  constructor(seed = 'fighter-course', {
+    spacing = 22,
+    width = 165,
+    height = 120,
+    lengthScale = 2.75,
+    lateralScale = 1.32,
+    verticalScale = 1.48,
+  } = {}) {
     this.seed = seed;
     this.spacing = spacing;
     this.width = width;
     this.height = height;
+    this.lengthScale = lengthScale;
+    this.lateralScale = lateralScale;
+    this.verticalScale = verticalScale;
+
     const rng = new PRNG(`${seed}:course`);
+    const origin = BASE_CONTROL_POINTS[0];
     this.controlPoints = BASE_CONTROL_POINTS.map((point, index) => {
-      if (index === 0 || index === BASE_CONTROL_POINTS.length - 1) return [...point];
+      const base = [
+        origin[0] + (point[0] - origin[0]) * lateralScale,
+        origin[1] + (point[1] - origin[1]) * verticalScale,
+        origin[2] + (point[2] - origin[2]) * lengthScale,
+      ];
+      if (index === 0 || index === BASE_CONTROL_POINTS.length - 1) return base;
       return [
-        point[0] + rng.range(-42, 42),
-        Math.max(72, point[1] + rng.range(-28, 28)),
-        point[2] + rng.range(-18, 18),
+        base[0] + rng.range(-56, 56),
+        Math.max(82, base[1] + rng.range(-42, 42)),
+        base[2] + rng.range(-34, 34),
       ];
     });
-    const dense = rawSplineSamples(this.controlPoints, 40);
+
+    const dense = rawSplineSamples(this.controlPoints, 44);
     this.samples = buildFrames(resampleByDistance(dense, spacing));
     this.length = this.samples.at(-1).distance;
   }
@@ -175,9 +193,9 @@ export class Course3D {
     };
   }
 
-  nearestProgress(position, hintDistance = 0, searchRadius = 520) {
+  nearestProgress(position, hintDistance = 0, searchRadius = 1450) {
     const centerIndex = Math.round(clamp(hintDistance, 0, this.length) / this.spacing);
-    const radius = Math.max(8, Math.ceil(searchRadius / this.spacing));
+    const radius = Math.max(12, Math.ceil(searchRadius / this.spacing));
     const start = Math.max(0, centerIndex - radius);
     const end = Math.min(this.samples.length - 1, centerIndex + radius);
     let bestIndex = start;
@@ -201,12 +219,15 @@ export class Course3D {
     };
   }
 
-  checkpointDistances(count = 18) {
+  checkpointDistances(count = 20) {
     return Array.from({ length: count }, (_, index) => (index + 1) * this.length / (count + 1));
   }
 
   sectorIndex(distance, sectorCount = 10) {
-    return Math.min(sectorCount - 1, Math.max(0, Math.floor(clamp(distance, 0, this.length - 0.001) / this.length * sectorCount)));
+    return Math.min(
+      sectorCount - 1,
+      Math.max(0, Math.floor(clamp(distance, 0, this.length - 0.001) / this.length * sectorCount)),
+    );
   }
 }
 
