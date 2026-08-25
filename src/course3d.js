@@ -81,7 +81,6 @@ function rotateFrameAroundForward(right, up, angle) {
 
 function buildFrames(samples) {
   let previousUp = [0, 1, 0];
-  let previousTangent = [0, 0, 1];
   for (let index = 0; index < samples.length; index += 1) {
     const previous = samples[Math.max(0, index - 1)].position;
     const next = samples[Math.min(samples.length - 1, index + 1)].position;
@@ -93,10 +92,22 @@ function buildFrames(samples) {
     let right = V3.normalize(V3.cross(up, forward));
     up = V3.normalize(V3.cross(forward, right));
 
-    const turn = V3.cross(previousTangent, forward);
-    const signedCurvature = V3.dot(turn, up);
-    const edgeFade = Math.min(1, index / 14, (samples.length - 1 - index) / 14);
-    const bank = clamp(-signedCurvature * 96, -1.02, 1.02) * clamp(edgeFade, 0, 1);
+    // Estimate curvature over a broad look-ahead rather than adjacent samples.
+    // At Mach-class speed this yields a physically legible bank: tan(bank) = v²κ/g.
+    const look = 8;
+    const behind = samples[Math.max(0, index - look)].position;
+    const center = samples[index].position;
+    const ahead = samples[Math.min(samples.length - 1, index + look)].position;
+    const tangentIn = V3.normalize(V3.sub(center, behind));
+    const tangentOut = V3.normalize(V3.sub(ahead, center));
+    const signedTurnSine = clamp(V3.dot(V3.cross(tangentIn, tangentOut), up), -0.98, 0.98);
+    const signedTurnAngle = Math.asin(signedTurnSine);
+    const arcLength = Math.max(80, V3.distance(behind, center) + V3.distance(center, ahead));
+    const signedCurvature = signedTurnAngle / arcLength;
+    const referenceSpeed = 500;
+    const physicalBank = Math.atan((referenceSpeed * referenceSpeed * signedCurvature) / 9.80665);
+    const edgeFade = Math.min(1, index / 18, (samples.length - 1 - index) / 18);
+    const bank = clamp(-physicalBank, -1.05, 1.05) * clamp(edgeFade, 0, 1);
     ({ right, up } = rotateFrameAroundForward(right, up, bank));
 
     samples[index] = {
@@ -108,7 +119,6 @@ function buildFrames(samples) {
       orientation: Q.fromBasis(V3.normalize(right), V3.normalize(up), forward),
     };
     previousUp = up;
-    previousTangent = forward;
   }
   return samples;
 }
