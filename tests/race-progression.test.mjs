@@ -29,7 +29,7 @@ assert.deepEqual(levels.map((event) => event.family), LEVEL_PLAN.map((level) => 
 assert.ok(levels.every((event, index) => event.levelName === LEVEL_PLAN[index].name));
 assert.ok(levels.every((event, index) => event.evidenceStrength === LEVEL_PLAN[index].evidence));
 assert.ok(levels.every((event, index) => index === 0 || event.observeDistance > levels[index - 1].observeDistance));
-assert.ok(levels.every((event, index) => index === 0 || event.evidenceStrength <= levels[index - 1].evidence));
+assert.ok(levels.every((event, index) => index === 0 || event.evidenceStrength <= levels[index - 1].evidenceStrength));
 assert.deepEqual(levels.filter((event) => event.demonstration).map((event) => event.level), [1, 2]);
 assert.deepEqual(levels.filter((event) => event.heldOutComposition).map((event) => event.level), [9, 10]);
 assert.equal(new Set(levels.map((event) => event.signature)).size, 10, 'every level needs a unique structural signature');
