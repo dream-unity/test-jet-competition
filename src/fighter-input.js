@@ -5,34 +5,64 @@ export function shapeControlAxis(value, deadzone = 0.055) {
   const magnitude = Math.abs(raw);
   if (magnitude <= deadzone) return 0;
   const normalized = (magnitude - deadzone) / (1 - deadzone);
-  const shaped = normalized * 0.34 + normalized ** 3 * 0.66;
+  const shaped = normalized * 0.38 + normalized ** 3 * 0.62;
   return Math.sign(raw) * shaped;
 }
 
+/**
+ * Compose one coherent control model across keyboard, mouse, touch and gamepad.
+ *
+ * - pitch is screen/direct by default: up means climb;
+ * - turn is an accessible coordinated-turn request;
+ * - manualRoll is independent, preserving barrel rolls and inverted flight;
+ * - yaw remains independently available for fine fighter alignment.
+ */
 export function composeFlightAxes({
   keyboardPitch = 0,
+  keyboardTurn = 0,
   keyboardRoll = 0,
   keyboardYaw = 0,
   keyboardThrottle = 0,
   stickPitch = 0,
-  stickRoll = 0,
+  stickTurn = 0,
   systemsYaw = 0,
   systemsThrottle = 0,
   mousePitch = 0,
-  mouseRoll = 0,
+  mouseTurn = 0,
   gamepadPitch = 0,
+  gamepadTurn = 0,
   gamepadRoll = 0,
   gamepadYaw = 0,
   gamepadThrottle = 0,
   invertPitch = false,
 } = {}) {
+  const rawTurn = clamp(keyboardTurn + stickTurn + mouseTurn + gamepadTurn, -1, 1);
+  const turn = shapeControlAxis(rawTurn);
+  const manualRoll = shapeControlAxis(clamp(keyboardRoll + gamepadRoll, -1, 1));
+
+  // A small lift request keeps an ordinary left/right turn from feeling like a falling barrel roll.
+  // It fades whenever the player is explicitly commanding pitch.
   const rawPitch = clamp(keyboardPitch + stickPitch + mousePitch + gamepadPitch, -1, 1);
-  const pitch = shapeControlAxis(rawPitch) * (invertPitch ? -1 : 1);
+  const turnLiftAssist = Math.abs(turn) * 0.105 * (1 - Math.min(1, Math.abs(rawPitch) * 1.6));
+  const pitch = shapeControlAxis(clamp(rawPitch + turnLiftAssist, -1, 1)) * (invertPitch ? -1 : 1);
+
+  const roll = shapeControlAxis(clamp(turn * 0.9 + manualRoll, -1, 1));
+  const yaw = shapeControlAxis(clamp(
+    keyboardYaw + systemsYaw + gamepadYaw + turn * 0.24,
+    -1,
+    1,
+  ));
+
   return {
     pitch,
-    roll: shapeControlAxis(clamp(keyboardRoll + stickRoll + mouseRoll + gamepadRoll, -1, 1)),
-    yaw: shapeControlAxis(clamp(keyboardYaw + systemsYaw + gamepadYaw, -1, 1)),
-    throttleDelta: shapeControlAxis(clamp(keyboardThrottle + systemsThrottle + gamepadThrottle, -1, 1), 0.08),
+    roll,
+    yaw,
+    turn,
+    manualRoll,
+    throttleDelta: shapeControlAxis(
+      clamp(keyboardThrottle + systemsThrottle + gamepadThrottle, -1, 1),
+      0.08,
+    ),
   };
 }
 
@@ -187,8 +217,8 @@ export class FighterInput {
   updateMouse(event) {
     if (!this.mouseOrigin) this.mouseOrigin = [event.clientX, event.clientY];
     const rect = this.canvas.getBoundingClientRect();
-    const horizontalRange = Math.max(120, rect.width * 0.22);
-    const verticalRange = Math.max(90, rect.height * 0.24);
+    const horizontalRange = Math.max(140, rect.width * 0.25);
+    const verticalRange = Math.max(105, rect.height * 0.27);
     const dx = event.clientX - this.mouseOrigin[0];
     const dy = this.mouseOrigin[1] - event.clientY;
     this.mouseAxis.x = clamp(dx / horizontalRange, -1, 1);
@@ -209,14 +239,19 @@ export class FighterInput {
   }
 
   sample() {
+    // Direct screen/flight convention: W, ArrowUp and stick-up command climb.
     const keyboardPitch = (this.keys.has('KeyW') || this.keys.has('ArrowUp') ? 1 : 0)
       - (this.keys.has('KeyS') || this.keys.has('ArrowDown') ? 1 : 0);
-    const keyboardRoll = (this.keys.has('KeyD') || this.keys.has('ArrowRight') ? 1 : 0)
+
+    // A/D are accessible coordinated turns. Q/E preserve unrestricted manual roll.
+    const keyboardTurn = (this.keys.has('KeyD') || this.keys.has('ArrowRight') ? 1 : 0)
       - (this.keys.has('KeyA') || this.keys.has('ArrowLeft') ? 1 : 0);
-    const keyboardYaw = (this.keys.has('KeyE') ? 1 : 0) - (this.keys.has('KeyQ') ? 1 : 0);
+    const keyboardRoll = (this.keys.has('KeyE') ? 1 : 0) - (this.keys.has('KeyQ') ? 1 : 0);
+    const keyboardYaw = (this.keys.has('KeyX') ? 1 : 0) - (this.keys.has('KeyZ') ? 1 : 0);
     const keyboardThrottle = (this.keys.has('KeyR') ? 1 : 0) - (this.keys.has('KeyF') ? 1 : 0);
 
     let gamepadPitch = 0;
+    let gamepadTurn = 0;
     let gamepadRoll = 0;
     let gamepadYaw = 0;
     let gamepadThrottle = 0;
@@ -226,10 +261,11 @@ export class FighterInput {
     const gamepad = [...pads].find(Boolean);
     if (gamepad) {
       const deadzone = (value, threshold = 0.13) => Math.abs(value) < threshold ? 0 : value;
-      gamepadRoll = deadzone(gamepad.axes[0] || 0);
+      gamepadTurn = deadzone(gamepad.axes[0] || 0);
       gamepadPitch = -deadzone(gamepad.axes[1] || 0);
       gamepadYaw = deadzone(gamepad.axes[2] || 0);
       gamepadThrottle = -deadzone(gamepad.axes[3] || 0, 0.2);
+      gamepadRoll = (gamepad.buttons[5]?.value || 0) - (gamepad.buttons[4]?.value || 0);
       gamepadAfterburner = Boolean(gamepad.buttons[0]?.pressed || gamepad.buttons[7]?.pressed);
       gamepadAirbrake = Boolean(gamepad.buttons[1]?.pressed || gamepad.buttons[6]?.pressed);
       const pausePressed = Boolean(gamepad.buttons[9]?.pressed);
@@ -242,16 +278,18 @@ export class FighterInput {
 
     const axes = composeFlightAxes({
       keyboardPitch,
+      keyboardTurn,
       keyboardRoll,
       keyboardYaw,
       keyboardThrottle,
       stickPitch: this.flightAxis.y,
-      stickRoll: this.flightAxis.x,
+      stickTurn: this.flightAxis.x,
       systemsYaw: this.systemsAxis.x,
       systemsThrottle: this.systemsAxis.y,
       mousePitch: this.mouseAxis.y,
-      mouseRoll: this.mouseAxis.x,
+      mouseTurn: this.mouseAxis.x,
       gamepadPitch,
+      gamepadTurn,
       gamepadRoll,
       gamepadYaw,
       gamepadThrottle,
