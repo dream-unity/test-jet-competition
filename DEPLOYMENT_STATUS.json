@@ -1,0 +1,34 @@
+{
+  "game": "Apex Relational Racing",
+  "deployment": "verified-live",
+  "architecture": "causal-relational-fighter-racing-v4",
+  "page_url": "https://dream-unity.github.io/test-jet-competition/",
+  "source_sha": "01bbf14a3d125fca03f0eb01e11bdf92cf1dfe4c",
+  "files_compared": [
+    "index.html",
+    "fighter-v4.css",
+    "src/math3d.js",
+    "src/renderer-v4.js",
+    "src/fighter-audio.js",
+    "src/fighter-input.js",
+    "src/fighter-flight.js",
+    "src/course3d.js",
+    "src/fighter-visuals.js",
+    "src/relational-racing.js",
+    "src/fighter-game.js"
+  ],
+  "sha256": [
+    "354f8acb0039c84fb734e9ee0840a4e69a521a51f979030aae919fa7c71e5e49  /tmp/apex-live/index.html",
+    "f74e9eecf522cc4379a0fa706881d6d0545d13e89d905dea6f899776dde7442f  /tmp/apex-live/fighter-v4.css",
+    "853bf9d12fed6de3297b463dde5524fde17d3c8893eb1413405a72e6d742ea2d  /tmp/apex-live/src/course3d.js",
+    "0cc94d2c1a8508abd83358c29a931daecdb0219a80f3596cb4390be364871b91  /tmp/apex-live/src/fighter-audio.js",
+    "e7bd0a1c53a6bfa809742c1d398b0074cbb2624d80b83be8cd72d7c1a1494bae  /tmp/apex-live/src/fighter-flight.js",
+    "56a3ce1ac087d68db3843f9c8386f1c28f297930b25fe276ec04c034d875bb90  /tmp/apex-live/src/fighter-game.js",
+    "8bf4b1aac79929f65c5f00988e2917e65cd0e79aecffea1799792a650dd7dce1  /tmp/apex-live/src/fighter-input.js",
+    "083a3a84ef13f247e4614ff928ec2b21c8e2d4a8507d0cf028af7f35a91e7d5e  /tmp/apex-live/src/fighter-visuals.js",
+    "55ded7ec23f949118ccb64bad4d2348d661f2f0b048a11ceaf3b6e48875fad31  /tmp/apex-live/src/math3d.js",
+    "0fa29949eaa761f7e6e0ccb5b257f3204e97f7c5fc39edd3aa13166bea5cc74f  /tmp/apex-live/src/relational-racing.js",
+    "be504ff43eecc9ec3feb6157a0dbee13d1a213b09dc3b03ef085fd1d7691c570  /tmp/apex-live/src/renderer-v4.js"
+  ],
+  "verified_at": "2026-08-25T00:40:00.218098+00:00"
+}
