@@ -1,5 +1,9 @@
 import { clamp } from './math3d.js';
 
+/**
+ * One continuous race. Each relational episode is a level in a single escalating
+ * competition; there are no separate training/assessment/transfer modes.
+ */
 export const LEVEL_PLAN = Object.freeze([
   Object.freeze({ level: 1, family: 'vortex-convergence', name: 'VORTEX READING', evidence: 1, explicit: true, demonstration: true }),
   Object.freeze({ level: 2, family: 'formation-mirror', name: 'FORMATION AXIS', evidence: 0.98, explicit: true, demonstration: true }),
@@ -16,8 +20,8 @@ export const LEVEL_PLAN = Object.freeze([
 export const SINGLE_RACE_CONFIG = Object.freeze({
   label: 'ONE RACE // TEN RELATIONAL LEVELS',
   button: 'LAUNCH THE RACE',
-  playerSpeed: 440,
-  aiSpeed: 425,
+  playerSpeed: 500,
+  aiSpeed: 482,
   eventCount: LEVEL_PLAN.length,
   evidence: 1,
   demonstrations: 2,
@@ -33,6 +37,10 @@ export function progressiveLevelAtDistance(episodes, distance) {
   return active?.level || episodes.at(-1)?.level || 1;
 }
 
+export function levelDefinition(level) {
+  return LEVEL_PLAN[clamp(Math.round(level || 1) - 1, 0, LEVEL_PLAN.length - 1)];
+}
+
 export function decorateProgressiveEpisodes(episodes, seed) {
   return episodes.map((event, index) => {
     const level = LEVEL_PLAN[index] || LEVEL_PLAN.at(-1);
@@ -42,6 +50,9 @@ export function decorateProgressiveEpisodes(episodes, seed) {
       levelName: level.name,
       family: level.family,
       difficulty: clamp(level.level, 1, 10),
+      evidenceStrength: level.evidence,
+      explicitFamily: level.explicit,
+      demonstration: level.demonstration,
       heldOutComposition: Boolean(level.heldOut),
       signature: `single-race-v5:${level.level}:${level.family}:${event.signature}:${seed}`,
     };
