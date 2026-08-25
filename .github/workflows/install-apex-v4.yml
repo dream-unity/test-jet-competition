@@ -1,0 +1,97 @@
+name: Install verified Apex Relational Racing v4 source
+
+on:
+  push:
+    branches: [apex-relational-racing-v4]
+    paths:
+      - 'bootstrap-v4/**'
+      - '.github/workflows/install-apex-v4.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: install-apex-relational-racing-v4
+  cancel-in-progress: false
+
+jobs:
+  reconstruct-test-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact v4 source branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: apex-relational-racing-v4
+          fetch-depth: 0
+
+      - name: Reconstruct and safely extract complete source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path, PurePosixPath
+          import base64
+          import hashlib
+          import shutil
+          import tarfile
+
+          parts = sorted(Path('bootstrap-v4').glob('part-[0-9][0-9].b64'))
+          expected_names = [f'part-{index:02d}.b64' for index in range(10)]
+          names = [path.name for path in parts]
+          if names != expected_names:
+              raise SystemExit(f'Unexpected payload set: {names}')
+
+          encoded = ''.join(''.join(path.read_text(encoding='ascii').split()) for path in parts)
+          archive = base64.b64decode(encoded.encode('ascii'), validate=True)
+          if not archive.startswith(b'\x1f\x8b\x08'):
+              raise SystemExit('Reconstructed payload is not a gzip archive')
+
+          archive_path = Path('/tmp/apex-relational-racing-v4.tar.gz')
+          destination = Path('/tmp/apex-relational-racing-v4')
+          archive_path.write_bytes(archive)
+          shutil.rmtree(destination, ignore_errors=True)
+          destination.mkdir(parents=True)
+
+          with tarfile.open(archive_path, 'r:gz') as bundle:
+              members = bundle.getmembers()
+              for member in members:
+                  path = PurePosixPath(member.name)
+                  if path.is_absolute() or '..' in path.parts:
+                      raise SystemExit(f'Unsafe archive member: {member.name}')
+                  if member.issym() or member.islnk():
+                      raise SystemExit(f'Archive links are prohibited: {member.name}')
+              bundle.extractall(destination, filter='data')
+
+          required = [
+              'index.html', 'fighter-v4.css', 'package.json',
+              'src/fighter-game.js', 'src/fighter-flight.js',
+              'src/relational-racing.js', 'src/fighter-visuals.js',
+              'tests/relational-validity.test.mjs',
+              '.github/workflows/pages.yml',
+          ]
+          missing = [name for name in required if not (destination / name).is_file()]
+          if missing:
+              raise SystemExit(f'Archive omitted required files: {missing}')
+
+          print('archive bytes:', len(archive))
+          print('archive sha256:', hashlib.sha256(archive).hexdigest())
+          print('safe members:', len(members))
+          PY
+
+          rsync -a --delete --exclude='.git/' /tmp/apex-relational-racing-v4/ ./
+          rm -rf bootstrap-v4 .github/workflows/install-apex-v4.yml
+          touch .nojekyll
+
+      - name: Validate fighter flight, causal reasoning, assessment and deployment
+        run: npm test
+
+      - name: Commit complete tested v4 source to its branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Install complete Apex Relational Racing v4 redesign'
+          git push origin HEAD:apex-relational-racing-v4
