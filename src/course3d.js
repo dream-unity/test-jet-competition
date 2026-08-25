@@ -30,7 +30,7 @@ const BASE_CONTROL_POINTS = Object.freeze([
   [0, 155, 10450],
 ]);
 
-function rawSplineSamples(controlPoints, subdivisions = 36) {
+function rawSplineSamples(controlPoints, subdivisions = 46) {
   const padded = [controlPoints[0], ...controlPoints, controlPoints.at(-1)];
   const samples = [];
   for (let segment = 0; segment < controlPoints.length - 1; segment += 1) {
@@ -54,7 +54,7 @@ function cumulativeDistances(points) {
   return cumulative;
 }
 
-function resampleByDistance(points, spacing = 14) {
+function resampleByDistance(points, spacing = 28) {
   const cumulative = cumulativeDistances(points);
   const total = cumulative.at(-1);
   const output = [];
@@ -81,7 +81,6 @@ function rotateFrameAroundForward(right, up, angle) {
 
 function buildFrames(samples) {
   let previousUp = [0, 1, 0];
-  let previousTangent = [0, 0, 1];
   for (let index = 0; index < samples.length; index += 1) {
     const previous = samples[Math.max(0, index - 1)].position;
     const next = samples[Math.min(samples.length - 1, index + 1)].position;
@@ -93,10 +92,22 @@ function buildFrames(samples) {
     let right = V3.normalize(V3.cross(up, forward));
     up = V3.normalize(V3.cross(forward, right));
 
-    const turn = V3.cross(previousTangent, forward);
-    const signedCurvature = V3.dot(turn, up);
-    const edgeFade = Math.min(1, index / 12, (samples.length - 1 - index) / 12);
-    const bank = clamp(-signedCurvature * 7.5, -0.82, 0.82) * clamp(edgeFade, 0, 1);
+    // Estimate curvature over a broad look-ahead rather than adjacent samples.
+    // At Mach-class speed this yields a physically legible bank: tan(bank) = v²κ/g.
+    const look = 8;
+    const behind = samples[Math.max(0, index - look)].position;
+    const center = samples[index].position;
+    const ahead = samples[Math.min(samples.length - 1, index + look)].position;
+    const tangentIn = V3.normalize(V3.sub(center, behind));
+    const tangentOut = V3.normalize(V3.sub(ahead, center));
+    const signedTurnSine = clamp(V3.dot(V3.cross(tangentIn, tangentOut), up), -0.98, 0.98);
+    const signedTurnAngle = Math.asin(signedTurnSine);
+    const arcLength = Math.max(80, V3.distance(behind, center) + V3.distance(center, ahead));
+    const signedCurvature = signedTurnAngle / arcLength;
+    const referenceSpeed = 500;
+    const physicalBank = Math.atan((referenceSpeed * referenceSpeed * signedCurvature) / 9.80665);
+    const edgeFade = Math.min(1, index / 18, (samples.length - 1 - index) / 18);
+    const bank = clamp(-physicalBank, -1.05, 1.05) * clamp(edgeFade, 0, 1);
     ({ right, up } = rotateFrameAroundForward(right, up, bank));
 
     samples[index] = {
@@ -108,27 +119,44 @@ function buildFrames(samples) {
       orientation: Q.fromBasis(V3.normalize(right), V3.normalize(up), forward),
     };
     previousUp = up;
-    previousTangent = forward;
   }
   return samples;
 }
 
 export class Course3D {
-  constructor(seed = 'fighter-course', { spacing = 14, width = 115, height = 82 } = {}) {
+  constructor(seed = 'fighter-course', {
+    spacing = 28,
+    width = 190,
+    height = 140,
+    lengthScale = 4.8,
+    lateralScale = 1.48,
+    verticalScale = 1.68,
+  } = {}) {
     this.seed = seed;
     this.spacing = spacing;
     this.width = width;
     this.height = height;
+    this.lengthScale = lengthScale;
+    this.lateralScale = lateralScale;
+    this.verticalScale = verticalScale;
+
     const rng = new PRNG(`${seed}:course`);
+    const origin = BASE_CONTROL_POINTS[0];
     this.controlPoints = BASE_CONTROL_POINTS.map((point, index) => {
-      if (index === 0 || index === BASE_CONTROL_POINTS.length - 1) return [...point];
+      const base = [
+        origin[0] + (point[0] - origin[0]) * lateralScale,
+        origin[1] + (point[1] - origin[1]) * verticalScale,
+        origin[2] + (point[2] - origin[2]) * lengthScale,
+      ];
+      if (index === 0 || index === BASE_CONTROL_POINTS.length - 1) return base;
       return [
-        point[0] + rng.range(-42, 42),
-        Math.max(72, point[1] + rng.range(-28, 28)),
-        point[2] + rng.range(-18, 18),
+        base[0] + rng.range(-68, 68),
+        Math.max(86, base[1] + rng.range(-48, 48)),
+        base[2] + rng.range(-54, 54),
       ];
     });
-    const dense = rawSplineSamples(this.controlPoints, 40);
+
+    const dense = rawSplineSamples(this.controlPoints, 48);
     this.samples = buildFrames(resampleByDistance(dense, spacing));
     this.length = this.samples.at(-1).distance;
   }
@@ -175,9 +203,9 @@ export class Course3D {
     };
   }
 
-  nearestProgress(position, hintDistance = 0, searchRadius = 520) {
+  nearestProgress(position, hintDistance = 0, searchRadius = 2600) {
     const centerIndex = Math.round(clamp(hintDistance, 0, this.length) / this.spacing);
-    const radius = Math.max(8, Math.ceil(searchRadius / this.spacing));
+    const radius = Math.max(14, Math.ceil(searchRadius / this.spacing));
     const start = Math.max(0, centerIndex - radius);
     const end = Math.min(this.samples.length - 1, centerIndex + radius);
     let bestIndex = start;
@@ -201,12 +229,15 @@ export class Course3D {
     };
   }
 
-  checkpointDistances(count = 18) {
+  checkpointDistances(count = 20) {
     return Array.from({ length: count }, (_, index) => (index + 1) * this.length / (count + 1));
   }
 
   sectorIndex(distance, sectorCount = 10) {
-    return Math.min(sectorCount - 1, Math.max(0, Math.floor(clamp(distance, 0, this.length - 0.001) / this.length * sectorCount)));
+    return Math.min(
+      sectorCount - 1,
+      Math.max(0, Math.floor(clamp(distance, 0, this.length - 0.001) / this.length * sectorCount)),
+    );
   }
 }
 
