@@ -1,14 +1,17 @@
 {
   "game": "Apex Relational Racing",
-  "architecture": "causal-relational-fighter-racing-v4",
-  "source_sha": "01bbf14a3d125fca03f0eb01e11bdf92cf1dfe4c",
+  "architecture": "one-race-fluid-fighter-v5",
+  "source_sha": "53ed6327deed45e712fcbc8b8b405fae092185dd",
   "tests": "passed",
   "validated_components": [
-    "quaternion fighter flight",
-    "3D course and checkpoints",
-    "causal relational families",
-    "noisy trajectory-model identification",
-    "reasoning/motor dissociation",
+    "single continuous ten-level race",
+    "direct keyboard mouse touch and gamepad controls",
+    "coordinated turns plus independent roll and yaw",
+    "quaternion Mach-class fighter flight",
+    "48+ km three-dimensional course",
+    "non-blocking circuit checkpoints",
+    "causal relational families and trajectory assessment",
+    "progressive evidence withdrawal and held-out composition",
     "procedural fighter geometry",
     "static GitHub Pages surface"
   ],
@@ -28,5 +31,5 @@
     "pending_domain_unverified_at": null,
     "https_enforced": true
   },
-  "recorded_at": "2026-08-25T00:39:38.117834+00:00"
+  "recorded_at": "2026-08-25T01:45:07.459279+00:00"
 }
