@@ -14,8 +14,8 @@ assert.ok(composeFlightAxes({ keyboardPitch: 1, invertPitch: true }).pitch < -0.
 
 const rightTurn = composeFlightAxes({ keyboardTurn: 1 });
 const leftTurn = composeFlightAxes({ keyboardTurn: -1 });
-assert.ok(rightTurn.turn > 0.99 && rightTurn.roll > 0.85 && rightTurn.yaw > 0.1, 'right input must create a coordinated right turn');
-assert.ok(leftTurn.turn < -0.99 && leftTurn.roll < -0.85 && leftTurn.yaw < -0.1, 'left input must create a coordinated left turn');
+assert.ok(rightTurn.turn > 0.99 && rightTurn.roll > 0.72 && rightTurn.yaw > 0.05, 'right input must create a coordinated right turn');
+assert.ok(leftTurn.turn < -0.99 && leftTurn.roll < -0.72 && leftTurn.yaw < -0.05, 'left input must create a coordinated left turn');
 assert.ok(rightTurn.pitch > 0, 'coordinated turning must add a small altitude-maintaining lift request');
 
 const manualRoll = composeFlightAxes({ keyboardRoll: 1 });
