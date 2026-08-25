@@ -1,12 +1,13 @@
 {
   "game": "Apex Relational Racing",
   "deployment": "verified-live",
-  "architecture": "causal-relational-fighter-racing-v4",
+  "architecture": "one-race-fluid-fighter-v5",
   "page_url": "https://dream-unity.github.io/test-jet-competition/",
-  "source_sha": "01bbf14a3d125fca03f0eb01e11bdf92cf1dfe4c",
+  "source_sha": "53ed6327deed45e712fcbc8b8b405fae092185dd",
   "files_compared": [
     "index.html",
     "fighter-v4.css",
+    "single-race-v5.css",
     "src/math3d.js",
     "src/renderer-v4.js",
     "src/fighter-audio.js",
@@ -15,20 +16,33 @@
     "src/course3d.js",
     "src/fighter-visuals.js",
     "src/relational-racing.js",
-    "src/fighter-game.js"
+    "src/race-progression.js",
+    "src/fighter-game.js",
+    "src/single-race-v5.js"
+  ],
+  "verified_properties": [
+    "one continuous race",
+    "ten progressive relational levels",
+    "direct cross-device controls",
+    "non-blocking checkpoints",
+    "Mach-class fighter-flight runtime",
+    "byte-for-byte live source identity"
   ],
   "sha256": [
-    "354f8acb0039c84fb734e9ee0840a4e69a521a51f979030aae919fa7c71e5e49  /tmp/apex-live/index.html",
+    "6016b6ac5f31492daa72d8990e7941685783e55e3469e90a4f6256f29c8fc0ee  /tmp/apex-live/index.html",
     "f74e9eecf522cc4379a0fa706881d6d0545d13e89d905dea6f899776dde7442f  /tmp/apex-live/fighter-v4.css",
-    "853bf9d12fed6de3297b463dde5524fde17d3c8893eb1413405a72e6d742ea2d  /tmp/apex-live/src/course3d.js",
+    "b51c3bf0f36229143351e47ed33f82450b5ec320db1a02e5358f1a893c055ff7  /tmp/apex-live/single-race-v5.css",
+    "bcf0d0dc508bed7256aba19e69d9716487354a956c8f74dc72a70a8663c894ab  /tmp/apex-live/src/course3d.js",
     "0cc94d2c1a8508abd83358c29a931daecdb0219a80f3596cb4390be364871b91  /tmp/apex-live/src/fighter-audio.js",
-    "e7bd0a1c53a6bfa809742c1d398b0074cbb2624d80b83be8cd72d7c1a1494bae  /tmp/apex-live/src/fighter-flight.js",
+    "830777b19e397f8bd60c4d3d8a19d5128b95e02ee1312755cf9c85c3e23a1490  /tmp/apex-live/src/fighter-flight.js",
     "56a3ce1ac087d68db3843f9c8386f1c28f297930b25fe276ec04c034d875bb90  /tmp/apex-live/src/fighter-game.js",
-    "8bf4b1aac79929f65c5f00988e2917e65cd0e79aecffea1799792a650dd7dce1  /tmp/apex-live/src/fighter-input.js",
+    "2a0277a9f5497451239db8a8c5501adee3f310a2c7fcdfae397de232b04d921f  /tmp/apex-live/src/fighter-input.js",
     "083a3a84ef13f247e4614ff928ec2b21c8e2d4a8507d0cf028af7f35a91e7d5e  /tmp/apex-live/src/fighter-visuals.js",
     "55ded7ec23f949118ccb64bad4d2348d661f2f0b048a11ceaf3b6e48875fad31  /tmp/apex-live/src/math3d.js",
+    "0c995c4273a9dff73ebce3e9215f97af9ddb4abf890854b7bb0b9947ed3bb643  /tmp/apex-live/src/race-progression.js",
     "0fa29949eaa761f7e6e0ccb5b257f3204e97f7c5fc39edd3aa13166bea5cc74f  /tmp/apex-live/src/relational-racing.js",
-    "be504ff43eecc9ec3feb6157a0dbee13d1a213b09dc3b03ef085fd1d7691c570  /tmp/apex-live/src/renderer-v4.js"
+    "be504ff43eecc9ec3feb6157a0dbee13d1a213b09dc3b03ef085fd1d7691c570  /tmp/apex-live/src/renderer-v4.js",
+    "1c47d9af8cc0e840b69c0096206abed16eb7bdcfd1c98183d9e7b609100a9eeb  /tmp/apex-live/src/single-race-v5.js"
   ],
-  "verified_at": "2026-08-25T00:40:00.218098+00:00"
+  "verified_at": "2026-08-25T01:45:30.440888+00:00"
 }
