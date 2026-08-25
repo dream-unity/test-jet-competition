@@ -36,7 +36,7 @@ jobs:
           rm -rf /tmp/apex-relational-pages
           git worktree add --force /tmp/apex-relational-pages -B gh-pages origin/gh-pages
           find /tmp/apex-relational-pages -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
-          cp index.html fighter-v4.css package.json README.md DESIGN_CONTRACT.md LICENSE \
+          cp index.html fighter-v4.css package.json README.md DESIGN_CONTRACT.md \
              ASSET_MANIFEST.json THIRD_PARTY_NOTICES.md /tmp/apex-relational-pages/
           cp -R src /tmp/apex-relational-pages/src
           touch /tmp/apex-relational-pages/.nojekyll
