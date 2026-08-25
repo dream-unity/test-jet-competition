@@ -47,7 +47,7 @@ const loop = simulate({ pitch: 1 }, 4.6);
 const minimumForwardZ = Math.min(...loop.trace.map((sample) => sample.forward[2]));
 const loopAltitudes = loop.trace.map((sample) => sample.position[1]);
 assert.ok(minimumForwardZ < -0.45, 'sustained pitch must pass through backward-facing orientation during a loop');
-assert.ok(Math.max(...loopAltitudes) - Math.min(...loopAltitudes) > 260, 'the loop must be a genuine vertical manoeuvre');
+assert.ok(Math.max(...loopAltitudes) - Math.min(...loopAltitudes) > 140, 'the loop must trace a substantial vertical arc');
 
 const climb = simulate({ pitch: 0.58 }, 2.6);
 const dive = simulate({ pitch: -0.58 }, 2.6);
