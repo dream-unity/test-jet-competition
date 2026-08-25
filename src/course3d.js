@@ -30,7 +30,7 @@ const BASE_CONTROL_POINTS = Object.freeze([
   [0, 155, 10450],
 ]);
 
-function rawSplineSamples(controlPoints, subdivisions = 42) {
+function rawSplineSamples(controlPoints, subdivisions = 46) {
   const padded = [controlPoints[0], ...controlPoints, controlPoints.at(-1)];
   const samples = [];
   for (let segment = 0; segment < controlPoints.length - 1; segment += 1) {
@@ -54,7 +54,7 @@ function cumulativeDistances(points) {
   return cumulative;
 }
 
-function resampleByDistance(points, spacing = 22) {
+function resampleByDistance(points, spacing = 28) {
   const cumulative = cumulativeDistances(points);
   const total = cumulative.at(-1);
   const output = [];
@@ -95,8 +95,8 @@ function buildFrames(samples) {
 
     const turn = V3.cross(previousTangent, forward);
     const signedCurvature = V3.dot(turn, up);
-    const edgeFade = Math.min(1, index / 12, (samples.length - 1 - index) / 12);
-    const bank = clamp(-signedCurvature * 72, -0.92, 0.92) * clamp(edgeFade, 0, 1);
+    const edgeFade = Math.min(1, index / 14, (samples.length - 1 - index) / 14);
+    const bank = clamp(-signedCurvature * 96, -1.02, 1.02) * clamp(edgeFade, 0, 1);
     ({ right, up } = rotateFrameAroundForward(right, up, bank));
 
     samples[index] = {
@@ -115,12 +115,12 @@ function buildFrames(samples) {
 
 export class Course3D {
   constructor(seed = 'fighter-course', {
-    spacing = 22,
-    width = 165,
-    height = 120,
-    lengthScale = 2.75,
-    lateralScale = 1.32,
-    verticalScale = 1.48,
+    spacing = 28,
+    width = 190,
+    height = 140,
+    lengthScale = 4.8,
+    lateralScale = 1.48,
+    verticalScale = 1.68,
   } = {}) {
     this.seed = seed;
     this.spacing = spacing;
@@ -140,13 +140,13 @@ export class Course3D {
       ];
       if (index === 0 || index === BASE_CONTROL_POINTS.length - 1) return base;
       return [
-        base[0] + rng.range(-56, 56),
-        Math.max(82, base[1] + rng.range(-42, 42)),
-        base[2] + rng.range(-34, 34),
+        base[0] + rng.range(-68, 68),
+        Math.max(86, base[1] + rng.range(-48, 48)),
+        base[2] + rng.range(-54, 54),
       ];
     });
 
-    const dense = rawSplineSamples(this.controlPoints, 44);
+    const dense = rawSplineSamples(this.controlPoints, 48);
     this.samples = buildFrames(resampleByDistance(dense, spacing));
     this.length = this.samples.at(-1).distance;
   }
@@ -193,9 +193,9 @@ export class Course3D {
     };
   }
 
-  nearestProgress(position, hintDistance = 0, searchRadius = 1450) {
+  nearestProgress(position, hintDistance = 0, searchRadius = 2600) {
     const centerIndex = Math.round(clamp(hintDistance, 0, this.length) / this.spacing);
-    const radius = Math.max(12, Math.ceil(searchRadius / this.spacing));
+    const radius = Math.max(14, Math.ceil(searchRadius / this.spacing));
     const start = Math.max(0, centerIndex - radius);
     const end = Math.min(this.samples.length - 1, centerIndex + radius);
     let bestIndex = start;
