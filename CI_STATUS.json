@@ -1,0 +1,32 @@
+{
+  "game": "Apex Relational Racing",
+  "architecture": "causal-relational-fighter-racing-v4",
+  "source_sha": "cada61a89c555fcdc97160a38445688ef0ebfd63",
+  "tests": "passed",
+  "validated_components": [
+    "quaternion fighter flight",
+    "3D course and checkpoints",
+    "causal relational families",
+    "noisy trajectory-model identification",
+    "reasoning/motor dissociation",
+    "procedural fighter geometry",
+    "static GitHub Pages surface"
+  ],
+  "pages_response": {
+    "url": "https://api.github.com/repos/dream-unity/test-jet-competition/pages",
+    "status": "built",
+    "cname": null,
+    "custom_404": false,
+    "html_url": "https://dream-unity.github.io/test-jet-competition/",
+    "build_type": "legacy",
+    "source": {
+      "branch": "gh-pages",
+      "path": "/"
+    },
+    "public": true,
+    "protected_domain_state": null,
+    "pending_domain_unverified_at": null,
+    "https_enforced": true
+  },
+  "recorded_at": "2026-08-25T00:38:16.717299+00:00"
+}
